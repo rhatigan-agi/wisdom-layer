@@ -1,0 +1,81 @@
+# Metadata reference only. The actual package is built from a separate
+# private repository and published to PyPI as a compiled wheel.
+# This file documents the package metadata and optional dependencies.
+
+[project]
+name = "wisdom-layer"
+version = "1.0.0"
+description = "Cognitive architecture for AI agents that learn, reflect, and develop wisdom over time."
+readme = "README.md"
+license = "LicenseRef-WisdomLayer-Commercial"
+license-files = ["LICENSE"]
+requires-python = ">=3.11"
+authors = [
+    { name = "Jeff Rhatigan", email = "jeff@rhatigan.ai" },
+]
+keywords = [
+    "ai",
+    "agents",
+    "cognitive-architecture",
+    "memory",
+    "wisdom",
+    "llm",
+    "self-correction",
+    "langgraph",
+    "mcp",
+]
+classifiers = [
+    "Development Status :: 5 - Production/Stable",
+    "Intended Audience :: Developers",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3.13",
+    "Topic :: Scientific/Engineering :: Artificial Intelligence",
+    "Typing :: Typed",
+]
+# These are the runtime dependencies of the published `wisdom-layer` wheel.
+# They install automatically when you run `pip install wisdom-layer`.
+# This repo does not contain installable source — see the comment at top of file.
+dependencies = [
+    "pydantic>=2.0",
+    "numpy>=1.24",
+    "aiosqlite>=0.20",
+    "httpx>=0.25",
+    "anyio>=4.0",
+]
+
+[project.optional-dependencies]
+# Cloud LLM adapters use sentence-transformers for local embedding,
+# so it ships in each adapter extra. Backends that pair with these
+# adapters (SQLite, Postgres) require embeddings on every capture
+# and search; bundling avoids a second install step.
+anthropic = ["anthropic>=0.25", "sentence-transformers>=2.2"]
+openai = ["openai>=1.0", "sentence-transformers>=2.2"]
+gemini = ["google-genai>=1.0", "sentence-transformers>=2.2"]
+ollama = ["httpx>=0.25"]
+litellm = ["litellm>=1.0", "sentence-transformers>=2.2"]
+langgraph = ["langgraph>=0.2"]
+mcp = ["mcp>=1.0"]
+postgres = ["asyncpg>=0.29", "pgvector>=0.2"]
+embeddings = ["sentence-transformers>=2.2"]
+dashboard = ["wisdom-layer-dashboard>=1.0"]
+all-adapters = ["wisdom-layer[anthropic,openai,gemini,ollama,litellm]"]
+
+[project.scripts]
+# Tier-1 integration CLI. Installed automatically by `pip install wisdom-layer`.
+wisdom-layer-mcp = "wisdom_layer.mcp.cli:main"
+
+[project.urls]
+Homepage = "https://wisdomlayer.ai"
+Documentation = "https://wisdomlayer.ai/docs"
+Repository = "https://github.com/rhatigan-agi/wisdom-layer"
+Issues = "https://github.com/rhatigan-agi/wisdom-layer/issues"
+Changelog = "https://github.com/rhatigan-agi/wisdom-layer/blob/main/CHANGELOG.md"
+
+[tool.ruff]
+target-version = "py311"
+line-length = 100
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "N", "W", "UP", "B", "A", "SIM", "TCH"]

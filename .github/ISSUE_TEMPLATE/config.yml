@@ -1,0 +1,8 @@
+blank_issues_enabled: false
+contact_links:
+  - name: Documentation
+    url: https://wisdomlayer.ai/docs
+    about: Read the docs before filing an issue.
+  - name: Security report
+    url: https://github.com/rhatigan-agi/wisdom-layer/security/advisories/new
+    about: Report a security vulnerability privately. Do not open a public issue.

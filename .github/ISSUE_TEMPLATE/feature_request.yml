@@ -1,0 +1,39 @@
+name: Feature Request
+description: Suggest an enhancement or new capability for the Wisdom Layer SDK.
+title: "[Feature]: "
+labels: ["enhancement"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Feature requests are read but not all are accepted — the SDK is opinionated
+        and stays minimal on purpose. The most useful requests describe a real
+        problem you hit, not a speculative API shape.
+
+  - type: textarea
+    id: problem
+    attributes:
+      label: Problem
+      description: What are you trying to do? What's blocking you today?
+    validations:
+      required: true
+
+  - type: textarea
+    id: proposal
+    attributes:
+      label: Proposed solution
+      description: What would you like to see? An API sketch is welcome but optional.
+    validations:
+      required: true
+
+  - type: textarea
+    id: alternatives
+    attributes:
+      label: Alternatives considered
+      description: What workarounds did you try? Why are they insufficient?
+
+  - type: textarea
+    id: context
+    attributes:
+      label: Additional context
+      description: Anything else relevant — links, references, related issues.

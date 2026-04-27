@@ -1,0 +1,127 @@
+WISDOM LAYER COMMERCIAL LICENSE
+
+Copyright (c) 2026 Rhatigan AGI LLC (d/b/a Rhatigan Labs). All rights reserved.
+
+-----------------------------------------------------------------------
+
+1. DEFINITIONS
+
+   "Software" means the Wisdom Layer SDK, including all compiled
+   binaries (including compiled _internal modules) distributed in
+   the Python package "wisdom-layer" and on https://wisdomlayer.ai.
+   Sample code in the examples/ directory and documentation in the
+   docs/ directory may be freely used and adapted in Licensee's own
+   projects.
+
+   "Licensee" means the individual or legal entity installing, using,
+   or integrating the Software.
+
+   "License Key" means the opaque token issued by the Wisdom Layer
+   licensing service that, when supplied to the Software at runtime,
+   determines which tier of features the Licensee may use.
+
+   "Tier" means the feature set unlocked by a given License Key:
+   Free, Pro, or Enterprise. Tier limits are enforced at runtime by
+   the Software.
+
+2. GRANT
+
+   Subject to Licensee's compliance with this License, Rhatigan AGI
+   LLC (d/b/a Rhatigan Labs) grants Licensee a non-exclusive, non-transferable,
+   non-sublicensable right to install and use the Software inside
+   Licensee's own applications, solely for the purposes permitted by
+   Licensee's active Tier.
+
+3. TIER LIMITS
+
+   Free Tier: permitted for personal, evaluation, and small-scale
+   production use subject to the runtime-enforced limits documented
+   at https://wisdomlayer.ai/pricing. To upgrade to Pro or Enterprise,
+   visit https://wisdomlayer.ai/pricing or contact jeff@rhatigan.ai.
+
+   Pro and Enterprise Tiers: governed by the subscription agreement
+   between Licensee and Rhatigan AGI LLC. Seat counts, agent counts,
+   and feature access follow the active subscription; Licensee's
+   License Key is revoked on material non-payment after the grace
+   period set forth in that agreement.
+
+4. RESTRICTIONS
+
+   Licensee shall not:
+
+   (a) reverse-engineer, decompile, disassemble, or otherwise attempt
+       to derive source code from the compiled _internal modules of
+       the Software;
+
+   (b) redistribute, sublicense, lease, sell, or host the Software
+       (or any derivative) to third parties;
+
+   (c) remove, disable, or circumvent any license-check or
+       tier-enforcement code in the Software;
+
+   (d) modify the Software in any way that causes it to misrepresent
+       its tier, its version, or its origin; or
+
+   (e) use the Software in violation of applicable law.
+
+5. OWNERSHIP
+
+   The Software is licensed, not sold. Rhatigan AGI LLC retains all
+   right, title, and interest in and to the Software, including all
+   intellectual property rights. No rights are granted to Licensee
+   except as expressly set forth in this License.
+
+6. TERMINATION
+
+   This License terminates automatically upon (a) Licensee's material
+   breach, (b) non-payment of fees beyond the applicable grace
+   period, or (c) revocation of Licensee's License Key by Rhatigan
+   AGI LLC. On termination, Licensee must stop using the Software
+   and delete all installed copies. Sections 4, 5, 7, and 8 survive
+   termination.
+
+7. WARRANTY DISCLAIMER
+
+   THE SOFTWARE IS PROVIDED "AS IS" AND "AS AVAILABLE", WITHOUT
+   WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT
+   LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A
+   PARTICULAR PURPOSE, AND NONINFRINGEMENT. LICENSEE USES THE
+   SOFTWARE AT ITS OWN RISK.
+
+8. LIMITATION OF LIABILITY
+
+   TO THE MAXIMUM EXTENT PERMITTED BY LAW, RHATIGAN LABS LLC'S TOTAL
+   LIABILITY ARISING OUT OF OR RELATED TO THIS LICENSE SHALL NOT
+   EXCEED THE GREATER OF (a) FEES PAID BY LICENSEE IN THE TWELVE (12)
+   MONTHS PRECEDING THE CLAIM OR (b) ONE HUNDRED U.S. DOLLARS (USD
+   $100). IN NO EVENT SHALL RHATIGAN LABS LLC BE LIABLE FOR ANY
+   INDIRECT, INCIDENTAL, SPECIAL, CONSEQUENTIAL, OR PUNITIVE
+   DAMAGES.
+
+9. DATA HANDLING
+
+   The Software is an in-process library. It does not transmit
+   customer application data, user data, or memory/directive content
+   to Rhatigan AGI LLC. The Software communicates with the Wisdom
+   Layer licensing service solely to activate, validate, or revoke
+   License Keys. See SECURITY.md for the full secure-defaults posture.
+
+10. GOVERNING LAW
+
+    This License is governed by the laws of the State of Delaware,
+    USA, without regard to conflict-of-law principles. Any dispute
+    arising under this License shall be resolved in the state or
+    federal courts located in Delaware.
+
+11. ENTIRE AGREEMENT
+
+    This License (together with any applicable subscription
+    agreement for Pro or Enterprise Tiers) is the entire agreement
+    between Licensee and Rhatigan AGI LLC concerning the Software,
+    and supersedes all prior agreements on the subject.
+
+-----------------------------------------------------------------------
+
+Questions about licensing terms:  jeff@rhatigan.ai
+Security issues:                  see SECURITY.md
+Product documentation:            https://wisdomlayer.ai/docs

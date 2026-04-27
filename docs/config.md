@@ -83,7 +83,7 @@ agent = WisdomAgent(
     llm=model,
     # The backend's embedder is auto-wired from `model` at agent.initialize()
     # via bind_embedder — no embed_fn= needed.
-    storage=SQLiteBackend("./agent.db"),
+    backend=SQLiteBackend("./agent.db"),
 )
 ```
 

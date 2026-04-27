@@ -65,7 +65,7 @@ async def main() -> None:
             role="Customer support specialist",
         ),
         llm=model,
-        storage=backend,
+        backend=backend,
     )
     await agent.initialize()
     logger.info("Agent '%s' ready (tier: %s)\n", agent.name, agent.tier.value)

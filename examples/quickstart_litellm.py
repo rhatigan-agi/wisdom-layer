@@ -2,7 +2,7 @@
 
 Runs against any of the 100+ providers LiteLLM supports. This example
 targets AWS Bedrock; swap the model string + env vars to point at
-Azure, Cohere, Mistral, Together, OpenRouter, vLLM, etc.
+Azure, Cohere, Mistral, Together, OpenRouter, Ollama (local), vLLM, etc.
 
 Usage:
     # 1. Install the SDK with the LiteLLM extra
@@ -14,11 +14,31 @@ Usage:
     #    - Azure:    AZURE_API_KEY / AZURE_API_BASE / AZURE_API_VERSION
     #    - Cohere:   COHERE_API_KEY
     #    - Together: TOGETHERAI_API_KEY
+    #    - Ollama (local): no API key; just have ollama running
     #    - vLLM / OpenAI-compatible: OPENAI_API_KEY + api_base
     export AWS_REGION_NAME=us-east-1
 
     # 3. Run
     python quickstart_litellm.py
+
+``embedding_model=`` is required.
+    LiteLLMAdapter does not assume an embedding provider — pass the
+    embedding model explicitly or construction raises ``ConfigError``.
+    Pair the embedder with whatever your stack already uses:
+
+| Chat model                                          | Embedding model                          |
+|-----------------------------------------------------|------------------------------------------|
+| ``bedrock/anthropic.claude-3-sonnet-...``           | ``bedrock/amazon.titan-embed-text-v2:0`` |
+| ``azure/gpt-4``                                     | ``azure/text-embedding-3-small``         |
+| ``ollama/llama3.1`` (local)                         | ``ollama/nomic-embed-text`` (local)      |
+| ``openai/gpt-4o-mini``                              | ``openai/text-embedding-3-small``        |
+
+    Prefer a *dedicated* embedding model. If you point ``embedding_model``
+    at a chat model (e.g. ``ollama/qwen2.5-coder``) it will work — the
+    adapter will pull a hidden-state vector — but similarity scores come
+    back compressed (often 0.02–0.05 for clearly related content).
+    Search ranking is still correct, but the absolute numbers will look
+    "broken" to anyone reading them.
 
 Model-string reference (a few of the top providers):
 
@@ -30,6 +50,7 @@ Model-string reference (a few of the top providers):
 | Mistral      | ``mistral/mistral-large-latest``                     |
 | Together AI  | ``together_ai/meta-llama/Meta-Llama-3-70B-Instruct`` |
 | OpenRouter   | ``openrouter/anthropic/claude-3.5-sonnet``           |
+| Ollama       | ``ollama/llama3.1`` (chat) + ``ollama/nomic-embed-text`` (embed) |
 | Perplexity   | ``perplexity/llama-3.1-sonar-large-128k-online``     |
 | vLLM (local) | ``openai/<model-id>`` with ``api_base=...``          |
 """
@@ -71,7 +92,7 @@ async def main() -> None:
             role="Customer support specialist",
         ),
         llm=model,
-        storage=backend,
+        backend=backend,
     )
     await agent.initialize()
     logger.info("Agent '%s' ready (tier: %s)\n", agent.name, agent.tier.value)

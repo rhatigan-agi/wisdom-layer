@@ -157,6 +157,15 @@ and salience.
 
 Directives are behavioral rules the agent authors and follows.
 
+> **Tier note:** `directives.add()` and `promote()` require the Pro tier
+> (`directive_evolution` feature). On the Free tier, directive *reading*
+> works (`active()`, `relevant()`, `compose_context()`) so you can ship
+> a curated rule set with your app — but mutation raises
+> `TierRestrictionError`. To follow this step verbatim, set
+> `WISDOM_LAYER_LICENSE` to a Pro key
+> ([wisdomlayer.ai/pricing](https://wisdomlayer.ai/pricing)). Free-tier
+> users can still run steps 1–3, 5 (critic), and 7–8.
+
 ```python
 directive = await agent.directives.add(
     "Acknowledge customer emotion before discussing policy."

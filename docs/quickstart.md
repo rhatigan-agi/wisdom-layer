@@ -23,6 +23,51 @@ pip install "wisdom-layer[anthropic]"
 For local models, see [quickstart_local.py](../examples/quickstart_local.py)
 which uses `CallableAdapter` to wrap any OpenAI-compatible endpoint.
 
+## Setting Your License Key
+
+A Wisdom Layer license unlocks Pro and Enterprise features. The SDK
+reads it from process environment as `WISDOM_LAYER_LICENSE`, and you
+pass that into `AgentConfig(api_key=...)`:
+
+```python
+import os
+config = AgentConfig.for_dev(
+    name="my-agent",
+    api_key=os.environ["WISDOM_LAYER_LICENSE"],   # wl_pro_... or wl_ent_...
+)
+```
+
+**The SDK does not auto-load `.env` files.** Silent `.env` loading
+across projects causes hard-to-debug failures when shells get polluted
+by another tool's variables, so we leave that choice to you. Pick one
+of these patterns:
+
+**Shell export** (simplest):
+```bash
+export WISDOM_LAYER_LICENSE=wl_pro_...
+python my_agent.py
+```
+
+**Source a `.env` before launch:**
+```bash
+set -a && source .env && set +a
+python my_agent.py
+```
+
+**Or load it in code** with [`python-dotenv`](https://pypi.org/project/python-dotenv/):
+```python
+from dotenv import load_dotenv
+load_dotenv()  # before importing wisdom_layer
+```
+
+The same pattern applies to the bundled CLIs — `wisdom-layer-dashboard`
+and `wisdom-layer-mcp` both read `WISDOM_LAYER_LICENSE` from the
+process environment only.
+
+> Skipping the license key entirely is supported: omit `api_key` (or
+> pass an empty string) and the SDK runs in anonymous Free mode. Get a
+> registered key at [wisdomlayer.ai/pricing](https://wisdomlayer.ai/pricing).
+
 ## Run the Example
 
 ```bash

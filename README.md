@@ -504,6 +504,7 @@ See [wisdomlayer.ai/pricing](https://wisdomlayer.ai/pricing) for current pricing
 |---|---|
 | [LangGraph](docs/langgraph.md) | 4 drop-in nodes for LangGraph agents |
 | [MCP Server](docs/mcp.md) | Expose agent to Claude Code, Cursor, and any MCP tool |
+| [Dashboard](docs/dashboard.md) | Web UI for inspecting memories, directives, dreams, and health |
 | [Claude Agent SDK](docs/claude-agent-sdk.md) | Add wisdom to Anthropic Agent SDK agents |
 | [OpenAI Agents SDK](docs/openai-agents-sdk.md) | Coming soon |
 

@@ -360,6 +360,8 @@ Postgres dim ships.
 
 ## "My dashboard won't connect"
 
+For a full launch + configuration guide, see [dashboard.md](dashboard.md).
+
 ### `ModuleNotFoundError: No module named 'wisdom_layer.dashboard'`
 
 **Likely cause.** Dashboard is an optional extra.
@@ -377,6 +379,21 @@ used to write data.
 
 **Diagnosis.** Verify `--agent-id` matches the `agent_id` used in your
 SDK code.
+
+### Dashboard runs in anonymous tier even though I have a Pro key
+
+**Likely cause.** `WISDOM_LAYER_LICENSE` isn't visible to the
+dashboard process. The CLI reads from process environment only — it
+does not auto-load `.env`.
+
+**Diagnosis.** Run `echo $WISDOM_LAYER_LICENSE` in the same shell you
+use to launch `wisdom-layer-dashboard`. If it's empty, your `.env`
+isn't being sourced.
+
+**Fix.** Either `export WISDOM_LAYER_LICENSE=wl_pro_...` directly, or
+`set -a && source .env && set +a` before launching. See the
+[quickstart](quickstart.md#setting-your-license-key) for other
+patterns.
 
 ---
 

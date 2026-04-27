@@ -54,17 +54,19 @@ anthropic = ["anthropic>=0.25", "sentence-transformers>=2.2"]
 openai = ["openai>=1.0", "sentence-transformers>=2.2"]
 gemini = ["google-genai>=1.0", "sentence-transformers>=2.2"]
 ollama = ["httpx>=0.25"]
-litellm = ["litellm>=1.0", "sentence-transformers>=2.2"]
+litellm = ["litellm>=1.50"]  # bring-your-own embedder (LiteLLM routes embeddings via litellm.aembedding)
 langgraph = ["langgraph>=0.2"]
 mcp = ["mcp>=1.0"]
 postgres = ["asyncpg>=0.29", "pgvector>=0.2"]
 embeddings = ["sentence-transformers>=2.2"]
-dashboard = ["wisdom-layer-dashboard>=1.0"]
+dashboard = ["fastapi>=0.115", "uvicorn[standard]>=0.30", "websockets>=13"]
 all-adapters = ["wisdom-layer[anthropic,openai,gemini,ollama,litellm]"]
 
 [project.scripts]
-# Tier-1 integration CLI. Installed automatically by `pip install wisdom-layer`.
+# Console scripts installed automatically by `pip install wisdom-layer`.
+# `wisdom-layer-dashboard` requires the `[dashboard]` extra at runtime.
 wisdom-layer-mcp = "wisdom_layer.mcp.cli:main"
+wisdom-layer-dashboard = "wisdom_layer.dashboard.cli:main"
 
 [project.urls]
 Homepage = "https://wisdomlayer.ai"

@@ -93,7 +93,15 @@ Subject access (Article 15) and portability (Article 20) are served by
 ## Secure Defaults
 
 - **No network at import time.** I/O starts at `agent.initialize()`.
-- **No telemetry.** No phone-home, no usage reporting.
+- **Telemetry policy.** No memory content, prompts, agent data, or PII
+  ever leaves the host. The Free tier sends a small daily anonymous
+  count-payload (~600 bytes — install ID, SDK version, agent / memory /
+  message counts, OS, Python major.minor) to
+  `api.wisdomlayer.ai/v1/telemetry`. Pro and Enterprise are silent by
+  default; opt-in via `WL_TELEMETRY=1`. Free disables with
+  `WL_TELEMETRY=0`. Endpoint override via `WL_TELEMETRY_ENDPOINT`.
+  Full schema, retention, and audit notes:
+  [docs/telemetry.md](docs/telemetry.md).
 - **No bundled secrets.** All samples use `os.environ[...]` for keys.
 - **Deterministic time in tests.** `FrozenClock` by default in test fixtures.
 - **PermissionManager is required.** Every mutating primitive checks permissions.

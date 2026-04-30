@@ -19,7 +19,7 @@ runtime, not whether you agree to the license itself.
 
 - Install Wisdom Layer into your own applications.
 - Use it for personal, evaluation, or commercial purposes, within
-  the limits of your active tier (Free / Pro / Enterprise).
+  the limits of your active tier (Free / Pro / Team / Enterprise).
 - Ship your own product that integrates Wisdom Layer, provided you
   do not redistribute the Wisdom Layer wheel itself.
 
@@ -35,21 +35,89 @@ runtime, not whether you agree to the license itself.
 
 ## 4. Tier limits
 
-- **Free Tier.** Runtime limits are documented at
-  [wisdomlayer.ai/pricing](https://wisdomlayer.ai/pricing). The free
-  tier is "free to use", not "free to modify or redistribute".
-- **Pro / Enterprise Tiers.** Governed by your subscription agreement.
-  Your license key is revoked on non-payment after the grace period
-  in that agreement.
+- **Free Tier.** Runtime limits and capacity caps are documented at
+  [wisdomlayer.ai/pricing](https://wisdomlayer.ai/pricing) and in
+  `docs/tiers.md`. The Free tier is licensed for personal projects,
+  evaluation, learning, and internal exploration. It is **not licensed
+  for commercial production deployment**. The Free tier is "free to
+  use", not "free to modify or redistribute".
+- **Pro Tier.** Single developer seat. Licensed for **internal tools
+  and production systems** your team operates and your team interacts
+  with. Customer-facing, multi-tenant, embedded, white-label, or OEM
+  deployments require an Enterprise license.
+- **Team Tier.** Up to five (5) named developer seats under one
+  organization, with shared billing. Same SDK feature set and same
+  use rights as Pro: licensed for internal tools and production
+  systems your team operates. Customer-facing, multi-tenant, embedded,
+  white-label, or OEM deployments require an Enterprise license.
+  License keys are issued per-seat and are not transferable; sharing
+  a key beyond the seat allowance is a breach of these Terms.
+- **Enterprise Tier.** Licensed for customer-facing, multi-tenant,
+  embedded, white-label, and OEM deployments, including agents shipped
+  inside products sold to third parties.
+- **14-Day Pro Trial.** Every new Free signup includes a 14-day full
+  Pro trial with all Free capacity caps lifted and Pro-tier features
+  unlocked. The trial is bounded by signed JWT claims (`trial_ends_at`
+  + `tier_at_expiry`); at expiry, the license downgrades to Free
+  automatically. No payment information is required to start a trial,
+  and no payment is taken at trial expiry. The trial is non-recurring
+  and non-extendable; one trial per email address.
+- **Pro / Team / Enterprise Tiers.** Governed by your subscription
+  agreement. Your license key is revoked on non-payment after the
+  grace period in that agreement.
 
 ## 5. Data handling
 
-Wisdom Layer is an in-process library. It does not transmit your
-application data, your users' data, or the memories and directives
-your agents accumulate back to Rhatigan AGI LLC. The SDK talks to
-the Wisdom Layer licensing service only to activate, validate, or
-revoke license keys. See `SECURITY.md` for the full secure-defaults
-posture.
+Wisdom Layer is an in-process library. **No memory content, LLM
+prompts, LLM responses, agent names, directive text, fact text, user
+data, or PII** is transmitted to Rhatigan AGI LLC under any tier. The
+SDK transmits two things over the network beyond your own LLM calls:
+
+1. **License validation** to the Wisdom Layer licensing service
+   (activate, validate, revoke license keys).
+2. **Anonymous usage telemetry** — counts only — under the policy
+   below.
+
+### 5.1 Telemetry
+
+By default:
+
+- **Free tier:** anonymous usage telemetry is **enabled** (opt-out).
+- **Pro and Team tiers:** telemetry is **disabled** by default
+  (opt-in only).
+- **Enterprise tier:** telemetry is **disabled** by default and may
+  be disabled contractually for fully air-gapped deployments.
+
+The telemetry payload contains: a randomly generated install identifier
+(`install_id`, UUIDv4), SDK version, tier, and counts of agents,
+memories, messages (rolling 30-day), facts, dream cycles, and
+directives, plus the host operating system family (`linux` /
+`darwin` / `win32`) and Python major.minor version. **No content. No
+PII. No agent or directive text. No license key. No hostname or IP.**
+Full schema is published at
+[wisdomlayer.ai/docs/telemetry](https://wisdomlayer.ai/docs/telemetry).
+
+Telemetry can be disabled at any time by setting `WL_TELEMETRY=0` in
+the process environment, or by running `wisdom-layer telemetry off`,
+which adds your `install_id` to a server-side deny-list and queues
+existing rows for deletion within thirty (30) days. Setting
+`WL_TELEMETRY=1` opts a Pro, Team, or Enterprise install into
+telemetry on a goodwill basis; there is no pricing concession for
+opting in.
+
+**Retention.** Raw telemetry events are retained for twelve (12)
+months after `received_at`, after which raw rows are deleted and
+only aggregated daily rollups (counts by tier, version, OS) are
+retained indefinitely. Aggregated rollups contain no install-level
+identifiers.
+
+By installing or using the Free tier of the SDK, you acknowledge and
+consent to the anonymous usage telemetry described in this section
+and in the canonical telemetry policy referenced above. To withhold
+that consent, set `WL_TELEMETRY=0` before the first SDK invocation
+and the SDK will not transmit telemetry from that install.
+
+See `SECURITY.md` for the full secure-defaults posture.
 
 ## 6. Termination
 

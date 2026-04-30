@@ -406,17 +406,45 @@ unknowns).
 
 ## Dreams
 
-### `agent.dreams.trigger()` — **(Pro+)**
+### `agent.dreams.trigger(*, phases=None, lookback_days=None)` — **(Pro+)**
 
-Run a full dream cycle. Steps run in fixed order: `reconsolidate` →
+Run a dream cycle. Steps run in fixed order: `reconsolidate` →
 `evolve_directives` → `critic_audit` → `directive_decay` →
-`journal_synthesis`. There is no per-step opt-in — `trigger()` takes
-no arguments. A failure in one step is recorded but does not abort the
-remaining steps.
+`journal_synthesis`. A failure in one step is recorded but does not
+abort the remaining steps.
+
+> **New in v1.1.0:** `phases=` and `lookback_days=` are 1.1.0
+> additions. Pre-1.1.0 callers used `trigger()` with no arguments and
+> got the full five-step cycle every time; that call form still works
+> and still runs all five steps. The new keyword-only parameters give
+> Pro+ callers two new levers — phase subset selection (run only the
+> steps you need) and reconsolidation lookback bounding (cap LLM cost
+> on agents with deep history).
+
+**Parameters (keyword-only):**
+
+- `phases: Sequence[str] | None` — Optional subset of step names to
+  run, in the fixed order above. Valid names: `"reconsolidate"`,
+  `"evolve_directives"`, `"critic_audit"`, `"directive_decay"`,
+  `"journal_synthesis"`. `None` (default) runs all five. Use this for
+  lightweight passes — e.g. `phases=["reconsolidate"]` to consolidate
+  raw memories without spending on directive evolution or journal
+  synthesis. An empty sequence raises `ValueError`; an unknown name
+  raises `ValueError` listing the valid set.
+- `lookback_days: int | None` — Optional time window restricting which
+  raw memories the `reconsolidate` step considers. `None` (default)
+  preserves prior behavior — no time filter; consolidation ranks by
+  reinforcement and salience over all candidates. Set this when you
+  want the cycle to attend only to recent activity to bound LLM cost,
+  or when importing historical data whose `created_at` was preserved.
+  No-op for steps other than `reconsolidate`. Mirrors the parameter on
+  `estimate_cost`. Non-positive values raise `ValueError`.
 
 **Returns:** `dict[str, object]` with `cycle_id`, `started_at`,
-`completed_at`, `status` (`"success"` / `"partial"` / `"failed"`),
-and `steps` (list of per-step dicts — see below).
+`completed_at`, `duration_ms`, `status` (`"success"` / `"partial"` /
+`"failed"`), `summary` (multi-line narrative), `steps`, `cost_breakdown`
+(per-phase cost dicts), `total_tokens`, `total_usd`, and
+`total_duration_ms`.
 
 Each step dict contains `step_index`, `name`, `status`, `duration_ms`,
 `error`, `reason` (set for skipped steps), and `result` (step-specific
@@ -654,12 +682,17 @@ config = AgentConfig(
 )
 ```
 
-> **Production footgun.** `AgentConfig.retry_policy` defaults to `None`,
-> which means transient failures (`LLMRateLimitError`,
-> `LLMTimeoutError`, `LLMServerError`) propagate on the **first** failure
-> with no retry. For any non-toy deployment, pass an explicit
-> `RetryPolicy(max_attempts=3)` (or higher). Side-effect calls
-> (critic audit, coherence checks) are intentionally never retried.
+> **Default policy (v1.1.0+).** `AgentConfig.retry_policy` defaults
+> to `RetryPolicy()` (3 attempts, exponential backoff with jitter).
+> Transient `LLMRateLimitError`, `LLMTimeoutError`, and `LLMServerError`
+> errors retry automatically before surfacing. Pre-1.1 the default
+> was `None` (no retries), which proved to be a production footgun;
+> the flip in v1.1.0 is breaking-but-safer. To opt out and restore
+> the v1.0 behavior, pass `retry_policy=RetryPolicy(max_attempts=1)`
+> (or `retry_policy=None`, which is still accepted and means "no
+> retry wrapper installed"). Side-effect calls (critic audit,
+> coherence checks) are intentionally never retried regardless of
+> policy.
 
 ---
 

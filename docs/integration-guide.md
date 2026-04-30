@@ -193,10 +193,17 @@ no extra configuration:
 
 ### Tier Limits Are License-Enforced
 
-The agent count limit (Free = 1, Pro = 10, Enterprise = unlimited) is a
-license entitlement, not a storage constraint. The SDK will accept any number
-of agents in a backend — enforcement happens at license validation, not at
-the database layer.
+Free-tier capacity caps (3 agents, 1,000 memories per agent, 1,500
+messages per rolling 30-day window) are enforced in-process by the SDK
+at construction and call time. Pro's 10-agent limit is advisory and
+not technically enforced. Enterprise is uncapped. The SDK does not
+gate on agent count at the storage layer — multiple agents can share a
+backend regardless of tier — enforcement happens at license validation
+and on the count-bearing methods (`memory.capture`, `agent.respond`,
+`agent.initialize`).
+
+See [Cap Violation Handling](#cap-violation-handling) below for the
+exact exception shape.
 
 ### Data Erasure Is Per-Agent
 
@@ -297,6 +304,74 @@ except FeatureDisabledError as e:
 ```
 
 See [api-reference.md](api-reference.md) for the full error hierarchy.
+
+### Cap Violation Handling
+
+`TierRestrictionError` operates in **two modes** that callers should
+branch on:
+
+- **Feature gate (entitlement).** A method is unavailable on the
+  current tier. `e.feature` and `e.required_tier` are set;
+  `e.cap_kind is None`. Maps cleanly to HTTP **403 Forbidden**.
+- **Cap violation.** A Free-tier capacity cap was hit (messages,
+  memories, agents). `e.cap_kind` is set, with structured
+  `e.current` / `e.limit` / `e.reset_at` / `e.upgrade_url`. Maps
+  cleanly to HTTP **402 Payment Required**.
+
+```python
+from wisdom_layer import TierRestrictionError
+
+async def handle_user_message(agent, msg):
+    try:
+        return await agent.respond(msg)
+    except TierRestrictionError as e:
+        if e.cap_kind is None:
+            # Pro feature on Free tier — 403 in HTTP terms
+            raise HTTPException(403, {
+                "error": "tier_restriction",
+                "feature": e.feature,
+                "required_tier": e.required_tier,
+                "upgrade_url": e.upgrade_url,
+            })
+        # Cap violation — 402 in HTTP terms
+        raise HTTPException(402, {
+            "error": "capacity_cap",
+            "cap_kind": e.cap_kind,         # "messages_30d" | "memories" | "agents"
+            "current": e.current,
+            "limit": e.limit,
+            "reset_at": e.reset_at,         # ISO-8601 UTC, or None for non-rolling caps
+            "upgrade_url": e.upgrade_url,
+        })
+```
+
+#### What each `cap_kind` means
+
+| `cap_kind` | Source method | Recovery action |
+|---|---|---|
+| `"agents"` | `agent.initialize()` | Delete an unused agent or upgrade. Agent count is at construction time, no automatic reclaim. |
+| `"memories"` | `agent.memory.capture()` | Prune existing memories (`memory.delete_all()` per-agent erases everything; targeted deletes via `memory.delete()`) or upgrade. Search and reads keep working. |
+| `"messages_30d"` | `agent.respond()` | Wait until `reset_at` (rolling 30-day window) or upgrade. Memory capture and search continue working. |
+
+The `messages_30d` counter is **per-machine**, persisted in SQLite with
+WAL + busy_timeout for safe concurrent-instance behavior. Cross-machine
+aggregation is deferred to a future release; if you run multiple
+processes on multiple machines on Free, each machine has its own 30-day
+window.
+
+#### Surfacing the upgrade prompt
+
+The `upgrade_url` field always points at a deep-linked signup URL on
+[wisdomlayer.ai/pricing](https://wisdomlayer.ai/pricing). When you map
+`TierRestrictionError` into a UI surface, prefer to:
+
+1. Show the human-readable message (`str(e)`).
+2. Render the `upgrade_url` as a primary CTA.
+3. For `messages_30d`, render `reset_at` as a secondary "or wait
+   until …" option so the user sees that it self-resolves.
+
+The dashboard's **Account** page (bundled with `wisdom-layer[dashboard]`)
+already does this — see [docs/dashboard.md](dashboard.md) for the
+shipped UI.
 
 ## Production Patterns
 

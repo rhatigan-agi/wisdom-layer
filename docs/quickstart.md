@@ -9,10 +9,11 @@ Get a Wisdom Layer agent running in under 5 minutes.
 - Python 3.11+
 - An LLM API key (Anthropic, OpenAI, or any supported provider)
 - A Wisdom Layer license key is optional. Omit `api_key` and the SDK
-  runs in anonymous Free mode (capture, semantic search, directive
-  view). Pro features (directive evolution, the critic, dream cycles)
-  require a paid key — get one at
-  [wisdomlayer.ai/pricing](https://wisdomlayer.ai/pricing).
+  runs in anonymous Free mode (capture, basic search, directive view)
+  with the Free-tier capacity caps documented below. Sign up at
+  [wisdomlayer.ai/pricing](https://wisdomlayer.ai/pricing) for a free
+  registered key — you also get a **14-day full Pro trial** (no card)
+  with caps lifted and the full cognitive substrate unlocked.
 
 ## Install
 
@@ -66,7 +67,42 @@ process environment only.
 
 > Skipping the license key entirely is supported: omit `api_key` (or
 > pass an empty string) and the SDK runs in anonymous Free mode. Get a
-> registered key at [wisdomlayer.ai/pricing](https://wisdomlayer.ai/pricing).
+> registered key at [wisdomlayer.ai/pricing](https://wisdomlayer.ai/pricing) —
+> includes a 14-day full Pro trial with all caps lifted.
+
+## Free-Tier Capacity Caps
+
+The Free tier is generous enough to build something real. It is also
+hard-capped so production-shape usage forces an upgrade conversation.
+Caps are enforced in the SDK, not at a remote service:
+
+| Cap | Limit | What happens at the cap |
+|---|---|---|
+| Agents | 3 | `agent.initialize()` raises `TierRestrictionError(cap_kind="agents")`. |
+| Memories per agent | 1,000 | `memory.capture()` raises `TierRestrictionError(cap_kind="memories")`. Search and reads continue working. |
+| Messages per 30-day rolling | 1,500 | `agent.respond()` raises `TierRestrictionError(cap_kind="messages_30d")` with a `reset_at` timestamp. |
+
+Each cap exception carries structured fields (`cap_kind`, `current`,
+`limit`, `reset_at`, `upgrade_url`) so frameworks can surface a clean
+upgrade prompt rather than a generic 500.
+
+```python
+from wisdom_layer import TierRestrictionError
+
+try:
+    await agent.respond(user_message)
+except TierRestrictionError as e:
+    if e.cap_kind == "messages_30d":
+        return f"Message cap hit. Resets at {e.reset_at}. Upgrade: {e.upgrade_url}"
+    if e.cap_kind is None:
+        return f"Pro feature {e.feature} required. Upgrade: {e.upgrade_url}"
+    raise
+```
+
+**Trial signup lifts every cap for 14 days.** When the trial expires,
+caps re-engage and existing data is preserved — message counts since
+the trial-end timestamp roll into the Free message window. See
+[docs/tiers.md](tiers.md#trial-14-day-pro) for the full trial mechanic.
 
 ## Run the Example
 
@@ -102,6 +138,14 @@ agent = WisdomAgent(
 await agent.initialize()
 ```
 
+> **Embeddings run locally, not via your API key.** The cloud adapters
+> (`AnthropicAdapter`, `OpenAIAdapter`, `GeminiAdapter`) use
+> `sentence-transformers` on your machine for vector search — your
+> `api_key` only pays for generation. The embedder ships inside
+> `pip install wisdom-layer[anthropic]` (and the `[openai]` / `[gemini]`
+> extras); pass `embedding_model="..."` to swap models. See
+> [config.md § Embeddings](config.md#embeddings) for the full surface.
+
 Config presets handle the defaults: `AgentConfig.for_dev()` (local iteration),
 `AgentConfig.for_prod()` (production), `AgentConfig.for_testing()` (deterministic
 tests with dreams disabled). Use `AgentConfig.template_mode()` for locked
@@ -111,17 +155,25 @@ production deployments. See [config.md](config.md) for the full decision tree.
 team slug, deployment name). The SQLite database file is created automatically
 on first run. Migrations apply on `initialize()`.
 
-> **Heads-up for production:** `AgentConfig.retry_policy` defaults to `None`,
-> which means a single 429 / 5xx / timeout from the LLM vendor will surface
-> immediately. For anything beyond local iteration, pass an explicit
-> `retry_policy=RetryPolicy(max_attempts=3)`:
+> **Retry policy (v1.1.0+):** `AgentConfig.retry_policy` now defaults
+> to a real `RetryPolicy()` (3 attempts, exponential backoff with
+> jitter) — transient `429` / `5xx` / timeout errors from the LLM
+> vendor retry automatically. Tune the policy explicitly if you want
+> different limits, or opt out:
 >
 > ```python
 > from wisdom_layer.llm.retry import RetryPolicy
 >
+> # Tune (e.g., longer caps for batch jobs):
 > config = AgentConfig.for_prod(
 >     name="My Agent",
->     retry_policy=RetryPolicy(max_attempts=3),
+>     retry_policy=RetryPolicy(max_attempts=5, max_delay_s=900),
+> )
+>
+> # Opt out (surface every transient error immediately):
+> config = AgentConfig.for_prod(
+>     name="My Agent",
+>     retry_policy=RetryPolicy(max_attempts=1),
 > )
 > ```
 >
@@ -152,6 +204,24 @@ for r in results:
 
 Search ranks results by a weighted combination of semantic similarity, recency,
 and salience.
+
+**Filter by event type.** Pass `kinds=` (or its alias `event_types=`) to scope
+the search to one or more event-type tags — useful when retrieving session
+records, dream-cycle insights, or any other tag you've captured against:
+
+```python
+# Only dream-cycle insights
+insights = await agent.memory.search("policy lessons", kinds=["reconsolidated_insight"])
+
+# Equivalent (alias)
+insights = await agent.memory.search("policy lessons", event_types=["reconsolidated_insight"])
+
+# Only raw conversations, ignore everything else
+chat = await agent.memory.search("upset customer", kinds=["conversation"])
+```
+
+The same `kinds=` / `event_types=` filter is available on
+`agent.memory.export()` for selective backups and migrations.
 
 ### 4. Add Directives
 
@@ -236,6 +306,28 @@ for step in report["steps"]:
     print(step["name"], step["status"])
 ```
 
+> **Phase subsets and lookback (v1.1.0+):** `dreams.trigger()` accepts
+> two new keyword-only arguments — `phases=` and `lookback_days=` —
+> that let you run a subset of steps and bound the reconsolidation
+> window. Useful for lightweight passes that don't need the full
+> five-step cycle, or for cost control on agents with deep history.
+>
+> ```python
+> # Cheap pass — consolidate raw memories only:
+> await agent.dreams.trigger(phases=["reconsolidate"])
+>
+> # Bound LLM cost on a deep-history agent:
+> await agent.dreams.trigger(lookback_days=14)
+>
+> # Audit-only pass after a critic-flagged interaction:
+> await agent.dreams.trigger(phases=["critic_audit"])
+> ```
+>
+> Calling `trigger()` with no arguments still runs all five steps —
+> existing code keeps working unchanged. See
+> [api-reference.md](api-reference.md#agentdreamstriggerphasesnone-lookback_daysnone--pro)
+> for the full parameter contract.
+
 In production, schedule dream cycles:
 
 ```python
@@ -262,6 +354,26 @@ print(cost.total_usd, cost.total_tokens)
 display = await agent.status_display()
 print(display)
 ```
+
+## Anonymous Telemetry
+
+By default, Free-tier installs send a single anonymous count-payload
+per day to `api.wisdomlayer.ai/v1/telemetry`: install ID, SDK version,
+agent / memory / message / fact / dream-cycle / directive counts, OS,
+Python major.minor. **No content. No PII. No agent names. No memory
+text.** Roughly 600 bytes/day per install.
+
+Pro and Enterprise are silent by default; telemetry is opt-in via
+`WL_TELEMETRY=1` on those tiers.
+
+Disable on Free at any time:
+
+```bash
+export WL_TELEMETRY=0
+```
+
+Full disclosure, payload schema, and retention policy:
+[docs/telemetry.md](telemetry.md).
 
 ## Sync API
 

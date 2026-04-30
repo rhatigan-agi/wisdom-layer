@@ -171,6 +171,90 @@ limits = ResourceLimits.for_cloud()
 limits = ResourceLimits.for_small_model()
 ```
 
+### Free-tier capacity caps (orthogonal to deployment presets)
+
+`ResourceLimits` also carries the three Free-tier capacity caps. These
+fields are **tier-bound, not deployment-bound** — the `for_local` /
+`for_cloud` / `for_small_model` presets explicitly do not override
+them, so a Free-tier user does not accidentally lift their own caps by
+picking a different deployment shape:
+
+| Field | Default | Cap on |
+|---|---|---|
+| `max_agents_free` | `3` | Number of agents constructable per install. |
+| `max_memories_free` | `1_000` | Memories per agent (Free tier only). |
+| `max_messages_per_30d_free` | `1_500` | Rolling 30-day message count per install. |
+
+Pro and Enterprise tiers are unaffected — these caps short-circuit on
+non-Free tiers. See [docs/tiers.md](tiers.md) for the full tier matrix
+and [docs/integration-guide.md § Cap Violation Handling](integration-guide.md#cap-violation-handling)
+for how the caps surface as `TierRestrictionError`.
+
+---
+
+## Embeddings
+
+The cloud LLM adapters (`AnthropicAdapter`, `OpenAIAdapter`,
+`GeminiAdapter`) default to **local** sentence-transformers for vector
+search. Your provider API key pays for generation only — embeddings
+never leave the host.
+
+### Default behavior
+
+Each cloud adapter ships `all-MiniLM-L6-v2` (384-dim) bundled inside
+its extra:
+
+```bash
+pip install wisdom-layer[anthropic]   # also pulls sentence-transformers
+```
+
+The base `pip install wisdom-layer` does **not** pull
+`sentence-transformers` (or torch). Install the matching adapter extra
+or `[embeddings]` before constructing an agent that uses memory.
+`OllamaAdapter` embeds via the Ollama server (default
+`nomic-embed-text`, served by your local Ollama install — pull it with
+`ollama pull nomic-embed-text` before first run). `LiteLLMAdapter`
+requires an explicit `embedding_model=` and has no default.
+
+### Swapping the local model
+
+Pass `embedding_model=` on the adapter constructor:
+
+```python
+model = AnthropicAdapter(
+    api_key=os.environ["ANTHROPIC_API_KEY"],
+    embedding_model="BAAI/bge-base-en-v1.5",   # 768-dim
+)
+```
+
+`wisdom_layer.llm._embedding_registry.KNOWN_EMBEDDING_DIMS` enumerates
+models with pinned dims; unknown models are probed at `warmup()` by
+running one embed call and reading the vector length.
+
+### Vector-space stability
+
+Every memory row persists `embedding_model_id` and `embedding_dim`.
+`agent.initialize()` calls `backend.bind_embedder(adapter)`, which
+threads the adapter's identity into the backend; if you set those
+fields explicitly on the backend and they disagree with the adapter,
+`bind_embedder` raises `EmbeddingConfigMismatchError` at startup
+*before* any memory is written. The Postgres backend additionally
+hard-codes `VECTOR(384)` in its initial migration and rejects any
+adapter advertising a non-384 dim.
+
+### When you need to re-embed
+
+Switching `embedding_model=` on a database that already contains
+memories raises `EmbeddingDimensionMismatchError` on first search. Use
+`agent.memory.reembed()` (an async generator that yields progress
+dicts) to re-embed in place, or revert to the original embedder.
+
+### Failure modes
+
+See [troubleshooting.md](troubleshooting.md) for the four documented
+embedding errors: missing `sentence-transformers`, first-call download
+hang, warmup-skipped warning, and dimension/config mismatch.
+
 ---
 
 ## Retrieval mix
@@ -196,6 +280,27 @@ explicit `kinds=` filter to `memory.search()` — that signal indicates
 the caller is steering retrieval directly. Recommended range when
 enabling: `0.20–0.40` for agents whose dream cycles have produced
 high-signal insights worth surfacing proactively.
+
+---
+
+## Environment variables
+
+The SDK reads a small set of env vars from the process environment.
+None of these are auto-loaded from a `.env` file — you wire them via
+shell export, container env, or `python-dotenv` before importing
+`wisdom_layer`. See [quickstart.md](quickstart.md#setting-your-license-key)
+for the supported patterns.
+
+| Variable | Default | Purpose |
+|---|---|---|
+| `WISDOM_LAYER_LICENSE` | (unset) | License key. Unset = anonymous Free. `wl_pro_…` / `wl_ent_…` / `wl_trial_…` for paid tiers and trials. |
+| `WISDOM_LAYER_DATABASE_URL` | (unset) | Used by `backend_from_env()` to construct a backend. |
+| `WL_TELEMETRY` | `1` on Free, `0` on Pro/Enterprise | Opt-out (`0`) or opt-in (`1`) for anonymous usage telemetry. See [docs/telemetry.md](telemetry.md). |
+| `WL_TELEMETRY_ENDPOINT` | `https://api.wisdomlayer.ai/v1/telemetry` | Override the telemetry endpoint (e.g., to route through an internal forward proxy). |
+
+The bundled CLIs (`wisdom-layer-dashboard`, `wisdom-layer-mcp`) read
+the same env vars from their parent process — they do not have their
+own config file.
 
 ---
 

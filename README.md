@@ -16,8 +16,12 @@ Any Storage Backend (SQLite, Postgres, bring-your-own)
 ```
 
 The SDK ships as a single Python package. It runs in-process inside your
-application. It phones nothing home, it opens no sockets at import time, and
-it pulls no telemetry.
+application. No sockets at import time. No content, prompts, memories, or
+agent data ever leave your infrastructure. The Free tier sends a small
+anonymous count-payload once a day (counts only, no content, no PII) so
+we can answer real questions about adoption — full disclosure and an
+opt-out flag at [docs/telemetry.md](docs/telemetry.md). Pro and
+Enterprise are silent by default.
 
 ---
 
@@ -36,8 +40,9 @@ either happened. Wisdom Layer closes the loop:
   config, permanent directives) that survives sessions, deployments, and model
   upgrades. Experience accumulates on top of identity, not in place of it.
 - **In-process, not a service** — no sidecar to deploy, no proxy to
-  authenticate, no telemetry to firewall. The cognitive layer lives inside your
-  Python process.
+  authenticate, no inbound ports to firewall. The cognitive layer lives inside
+  your Python process. (Outbound: license validation always; on Free, an
+  anonymous daily count-payload — opt out with `WL_TELEMETRY=0`.)
 
 ---
 
@@ -105,14 +110,28 @@ ninety days into its own experience. That delta is the product.
 
 ## Measured Outcomes
 
-Initial fabrication-reduction evaluation: **22% → 2%** on a single-corpus
-eval (n=45, Claude Haiku, mode-aware judging).
-[See methodology →](benchmarks/fabrication_eval.md)
+**v1.0 Beta benchmark suite (April 2026), Claude Haiku 4.5 under test,
+GPT-4o GEval judge, four arms (Vanilla / mem0 / Basic Memory / Wisdom
+Layer):**
 
-The v1.0 Beta benchmark suite (four metrics — hallucination, longitudinal
-recall, self-correction, stale-info drift; DeepEval / GEval) is published at
-[wisdomlayer.ai/benchmarks](https://wisdomlayer.ai/benchmarks). Eval harness,
-raw transcripts, and expanded suites ship in a follow-up release.
+- **2.65× fewer fabrications than vanilla** — Wisdom Layer 0.916 vs
+  Vanilla 0.346 mean Groundedness, 5 / 5 probes pass at the 0.7 threshold.
+- **Perfect atomic-fact recall (10/10)** — tied with Basic Memory; mem0
+  and vanilla score 0/10.
+- **Independent quality audit ranks Wisdom Layer first** — composite
+  7.79 vs Basic 6.17 / mem0 6.00 / Vanilla 5.50, locked pre-committed
+  criteria, separate Opus 4.7 judge.
+- **Self-correction & drift handling** — Critic 3/3 PASS on directive-
+  adherence probes, last-write-wins drift score 1.000.
+
+Full table, methodology disclosures, and the contested 4-arm Groundedness
+result we publish anyway are at
+[wisdomlayer.ai/benchmarks](https://wisdomlayer.ai/benchmarks).
+Methodology files in this repository:
+[fabrication & grounding](benchmarks/fabrication_eval.md) ·
+[independent quality audit](benchmarks/independent_audit.md). Eval
+harness, raw transcripts, and expanded suites ship in a follow-up
+release.
 
 ---
 
@@ -147,9 +166,13 @@ cannot redeploy to fix a tier check or audit an opaque dependency.
 - **Ed25519-signed license tokens** -- tier claims are verified locally
   against an embedded public key. No network round-trip per call, no
   central authority can flip a feature on or off behind your back.
-- **Zero telemetry** -- agent counts, request volume, multi-tenancy
-  patterns, and deployment topology stay on your infrastructure.
-  Wisdom Layer never sees them.
+- **Privacy-respecting telemetry** -- the only network traffic the SDK
+  generates beyond your own LLM calls is (a) license validation against
+  the licensing API and (b) on the Free tier only, an anonymous daily
+  count-payload (~600 bytes) — no memory content, no prompts, no PII,
+  no agent or directive text. Pro and Enterprise are silent by default
+  (telemetry off; opt-in via `WL_TELEMETRY=1`). Free disables with
+  `WL_TELEMETRY=0`. Full schema: [`docs/telemetry.md`](docs/telemetry.md).
 
 Full enforcement model and per-method gate keys: [`docs/tiers.md`](docs/tiers.md).
 
@@ -454,22 +477,34 @@ import from it and expect minor-version stability.
 
 ## License Tiers
 
-| | Capture (Free) | Reflect (Pro) | Wisdom (Enterprise) |
+| | **Free** | **Pro** | **Enterprise** |
 |---|---|---|---|
-| Memory | Tier 1 only | Tier 1-3 | Tier 1-3 |
-| Dream Cycles | -- | Yes | Yes (custom phases: v1.1) |
-| Critic / Directives | -- | Yes | Yes |
-| Provenance | -- | trace | trace + explain + export |
-| Health Analytics | Stats only | wisdom_score + 30-day trajectory | + unlimited trajectory |
-| Cost Visibility | -- | summary + estimate | + CSV export |
-| Multi-Agent Mesh | -- | -- | v1.1 (shared pool + comms) |
-| Agents \* | 1 | 10 | Unlimited |
-| Storage \** | SQLite | Postgres / SQLite | Any |
-| Support | Docs only | Email | SLA + advisory |
+| Memory | Tier 1 (raw) | Tier 1–3 + semantic search | Tier 1–3 + semantic search |
+| Dream Cycles | — | On-demand + scheduled | + custom phases |
+| Critic / Directives | View directives only | Full lifecycle + Critic | Full lifecycle + Critic |
+| Provenance | — | `trace` | `trace` + `explain` + `export` |
+| Health Analytics | Basic stats | `wisdom_score` + 30-day trajectory | + unlimited trajectory |
+| Cost Visibility | — | Summary + estimate | + CSV export |
+| Multi-Agent Mesh / cross-agent memory | — | — | Yes |
+| Agents | **3 (hard cap)** | 10 (advisory) | Unlimited |
+| Memories per agent | **1,000 (hard cap)** | Unlimited | Unlimited |
+| Messages / 30-day rolling | **1,500 (hard cap)** | Unlimited | Unlimited |
+| Storage | SQLite | Postgres + SQLite | Any (custom adapters) |
+| Telemetry default | Opt-out (anonymous counts) | Off (opt-in) | Off (opt-in) |
+| Support | Docs + community | Email (~48hr) | SLA + advisory |
+| **Price** | **$0** | **$99/mo · Team $249/mo** | **Starts at $24K/yr — contact sales** |
 
-\* Agent counts are advisory and enforced by the licensing API,
-not by the in-process SDK. **\*\*** Storage backends are bundled
-extras (`wisdom-layer[postgres]`); tier-appropriate use is contractual.
+**14-day full Pro trial on signup.** Every Free signup includes a 14-day
+trial with all caps lifted and the full Pro substrate unlocked. No
+credit card. At expiry, the license downgrades to Free and existing
+data is preserved.
+
+Free-tier capacity caps (3 agents / 1,000 memories per agent / 1,500
+messages per rolling 30-day window) are **enforced in-process** by the
+SDK at construction and call time — they raise structured
+`TierRestrictionError` with `cap_kind`, `current`, `limit`, `reset_at`,
+and `upgrade_url` fields so frameworks can branch cleanly between
+"upgrade to unlock" (HTTP 403) and "you hit a usage cap" (HTTP 402).
 
 See [docs/tiers.md](docs/tiers.md) for the canonical feature matrix
 (every gated capability + internal feature keys + enforcement details).
@@ -515,7 +550,8 @@ See [wisdomlayer.ai/pricing](https://wisdomlayer.ai/pricing) for current pricing
 | [API Reference](docs/api-reference.md) | Full public surface reference |
 | [Tiers](docs/tiers.md) | Canonical per-tier feature matrix + enforcement model |
 | [Performance](docs/performance.md) | Storage benchmarks (SQLite vs Postgres) |
-| [Benchmarks](benchmarks/fabrication_eval.md) | Confabulation reduction methodology |
+| [Benchmarks](benchmarks/fabrication_eval.md) | v1.0 Beta fabrication & grounding evaluation methodology |
+| [Independent Audit](benchmarks/independent_audit.md) | Second-judge locked-rubric quality audit |
 
 ---
 

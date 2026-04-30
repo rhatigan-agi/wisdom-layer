@@ -23,6 +23,12 @@ we can answer real questions about adoption — full disclosure and an
 opt-out flag at [docs/telemetry.md](docs/telemetry.md). Pro and
 Enterprise are silent by default.
 
+> **See it running:** [Wisdom Studio](https://github.com/rhatigan-agi/wisdom-studio)
+> is the canonical reference UI for this SDK — a forkable FastAPI + React
+> app that spins up an agent in 60 seconds and visualizes its cognition
+> in real time. Apache-2.0. One docker command:
+> `docker run -p 3000:3000 ghcr.io/rhatigan-agi/wisdom-studio:latest`.
+
 ---
 
 ## Why This Isn't Another Memory Layer
@@ -110,7 +116,7 @@ ninety days into its own experience. That delta is the product.
 
 ## Measured Outcomes
 
-**v1.0 Beta benchmark suite (April 2026), Claude Haiku 4.5 under test,
+**v1.0.1 benchmark suite (April 2026), Claude Haiku 4.5 under test,
 GPT-4o GEval judge, four arms (Vanilla / mem0 / Basic Memory / Wisdom
 Layer):**
 
@@ -550,7 +556,7 @@ See [wisdomlayer.ai/pricing](https://wisdomlayer.ai/pricing) for current pricing
 | [API Reference](docs/api-reference.md) | Full public surface reference |
 | [Tiers](docs/tiers.md) | Canonical per-tier feature matrix + enforcement model |
 | [Performance](docs/performance.md) | Storage benchmarks (SQLite vs Postgres) |
-| [Benchmarks](benchmarks/fabrication_eval.md) | v1.0 Beta fabrication & grounding evaluation methodology |
+| [Benchmarks](benchmarks/fabrication_eval.md) | v1.0.1 fabrication & grounding evaluation methodology |
 | [Independent Audit](benchmarks/independent_audit.md) | Second-judge locked-rubric quality audit |
 
 ---

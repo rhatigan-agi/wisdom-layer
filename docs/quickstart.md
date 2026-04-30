@@ -393,6 +393,19 @@ with SyncWisdomAgent(name="my-agent", llm=model, backend=backend) as agent:
 a dedicated background event-loop thread so calls are safe from Jupyter.
 All calls block; no `await` is needed.
 
+## Want a UI?
+
+[Wisdom Studio](https://github.com/rhatigan-agi/wisdom-studio) is the
+canonical reference application for this SDK — a forkable FastAPI + React
+app with a chat surface, real-time cognition stream, side-by-side compare
+mode (baseline vs. memory vs. full-wisdom), and seven env vars for shaping
+kiosk / demo / embed deployments without code changes.
+
+```bash
+docker run -d -p 3000:3000 -v $HOME/.wisdom-studio:/data \
+  ghcr.io/rhatigan-agi/wisdom-studio:latest
+```
+
 ## Next Steps
 
 - [Integration Guide](integration-guide.md) -- sessions, lock modes, production patterns

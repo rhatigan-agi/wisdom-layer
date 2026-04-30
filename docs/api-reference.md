@@ -93,9 +93,23 @@ with SyncWisdomAgent(name="demo", llm=model, backend=backend) as agent:
 
 ## Memory
 
-### `agent.memory.capture(event_type: str, content: dict, *, emotional_intensity: float = 0.0)`
+### `agent.memory.capture(event_type: str, content: dict, *, emotional_intensity: float = 0.0, created_at: datetime | None = None)`
 
 Store a memory with automatic embedding, dedup, and salience scoring.
+
+- `emotional_intensity: float` — Optional emotional weight (0.0–1.0).
+  The only human-input lever; the SDK derives final salience from this
+  plus recency, reinforcement, and access patterns.
+- `created_at: datetime | None` — **New in v1.1.0.** Optional timestamp
+  override. `None` (default) stamps with the agent's clock now — the
+  expected path for live captures. Set this **only when importing
+  historical data** with preserved timestamps; passing it for live
+  capture corrupts the temporal model and breaks recency-weighted
+  retrieval and dream-cycle lookback windows. Must be timezone-aware
+  (UTC recommended), in the past, and within the last 10 years. Naive,
+  future, or >10-years-old timestamps raise `ValueError`. Pairs with
+  [`dreams.trigger(lookback_days=...)`](#agentdreamstriggerphasesnonelookbackdaysnone--pro)
+  for historical-import flows.
 
 **Returns:** `str` (memory_id)
 

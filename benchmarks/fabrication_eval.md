@@ -29,7 +29,7 @@ response is supported by retrieved memory. The pass threshold is 0.7.
 
 ---
 
-## Results: v1.0 Beta (April 2026)
+## Results: v1.0.1 (April 2026)
 
 ### Headline — 2-arm Faithfulness, vanilla baseline
 
@@ -83,7 +83,7 @@ architectural commitment, not a tunable knob.
 | | Value |
 |---|---|
 | Run date | 2026-04-26 |
-| Run label | v1.0 Beta |
+| Run label | v1.0.1 |
 | Model under test | `claude-haiku-4-5-20251001` (held constant across all arms) |
 | GEval judge model | `gpt-4o`, `temperature=0.0` |
 | Embedding | `bge-base-en-v1.5` (local, 768-dim) |
@@ -109,7 +109,7 @@ retrieval layer.
 
 So the "you used the wrong configuration" question is settled up front:
 
-- **Wisdom Layer** — v1.0 Beta SDK, default `WisdomAgent` with
+- **Wisdom Layer** — v1.0.1 SDK, default `WisdomAgent` with
   `compose_system_prompt(role=…)` (the public quickstart pattern),
   Haiku 4.5 answer model, `search_insight_ratio=0.30`.
 - **Basic Memory** — same Haiku 4.5 answer model, vector retrieval
@@ -147,11 +147,11 @@ to declarative summaries."
 
 After the fix, Basic Memory's Groundedness lifted from 0.08 → 0.59 on
 this corpus and the cross-arm ranking became coherent. Every published
-v1.0 Beta number uses the format-neutral criterion.
+v1.0.1 number uses the format-neutral criterion.
 
 ### 5. Statistical Rigor
 
-The v1.0 Beta results above are run on n = 5 probes (2-arm headline) /
+The v1.0.1 results above are run on n = 5 probes (2-arm headline) /
 n = 6 probes (4-arm extended). This is a deliberately small,
 high-quality probe set; we report what's reproducible from it and don't
 extrapolate.
@@ -186,7 +186,7 @@ Earlier internal runs phrased GEval criteria in fractional 0.0–1.0
 language. This collided with the judge's tokenizer logprob path and
 silently deflated scores by ~10×. Rewriting to integer 0–10 lifted
 absolute scores ~21pp on Groundedness across the board without
-changing relative rankings. Every v1.0 Beta number above uses the
+changing relative rankings. Every v1.0.1 number above uses the
 integer-phrased criteria.
 
 ### What We Don't Measure Here
@@ -208,7 +208,7 @@ integer-phrased criteria.
 ## Reproducing the Evaluation
 
 The probe set, the GEval criteria as scored, raw transcripts, and the
-per-arm scores will be released alongside the v1.0 Beta benchmark
+per-arm scores will be released alongside the v1.0.1 benchmark
 dataset in a follow-up. The summary numbers above and on
 [wisdomlayer.ai/benchmarks](https://wisdomlayer.ai/benchmarks)
 reference this same run.
@@ -226,7 +226,7 @@ To run your own version of this evaluation today:
    only "wins" because the probe set was selected for it, the result
    isn't informative
 
-The full v1.0 Beta benchmark suite (four primary metrics — fabrication,
+The full v1.0.1 benchmark suite (four primary metrics — fabrication,
 longitudinal recall, self-correction, drift) is published on the
 benchmark page above; this document covers fabrication / grounding
 specifically.

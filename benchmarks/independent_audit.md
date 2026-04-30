@@ -1,6 +1,6 @@
 # Independent Quality Audit
 
-A second-judge audit of the v1.0 Beta four-arm benchmark, with criteria
+A second-judge audit of the v1.0.1 four-arm benchmark, with criteria
 locked before any responses were read. Designed to surface the kind of
 fabrication that single-judge specificity-only rubrics can't detect — for
 example, a confident invention of a customer's tenure that scores high
@@ -33,7 +33,7 @@ independent judge that did not see the primary GEval scores:
 
 ---
 
-## Results: v1.0 Beta (April 2026)
+## Results: v1.0.1 (April 2026)
 
 | Arm | Customer-Helpfulness | Grounding Honesty | Production-Realism | Memory-Use Quality | **Composite** |
 |---|---:|---:|---:|---:|---:|
@@ -101,7 +101,7 @@ the two judging passes.
 
 So the "you used the wrong configuration" question is settled up front:
 
-- **Wisdom Layer** — v1.0 Beta SDK, default `WisdomAgent` with
+- **Wisdom Layer** — v1.0.1 SDK, default `WisdomAgent` with
   `compose_system_prompt(role=…)` (the public quickstart pattern),
   Haiku 4.5 answer model, `search_insight_ratio=0.30`.
 - **Basic Memory** — same Haiku 4.5 answer model, vector retrieval
@@ -133,10 +133,10 @@ variable is the memory/retrieval layer.
   5.50 on Grounding Honesty against the locked rubric."
 - **Single judge run.** One Opus 4.7 pass. Future audits target
   three-pass majority vote with inter-judge agreement reported.
-- **Version-bound.** This audit reflects the v1.0 Beta build of
+- **Version-bound.** This audit reflects the v1.0.1 build of
   Wisdom Layer and `mem0ai 2.0.1`. Future versions of either system
   may produce different results.
-- **Probe-design caveat.** A subset of v1.0 Beta probes used
+- **Probe-design caveat.** A subset of v1.0.1 probes used
   agent-voice framing that interacts with the audit's
   Production-Realism dimension. The v1.0.1 customer-voice probe
   redesign is queued for exactly this reason.
@@ -144,7 +144,7 @@ variable is the memory/retrieval layer.
 ### What the Audit Disclosed
 
 - **It's a quality validation, not a replacement for the primary
-  GEval result.** Both runs are part of the v1.0 Beta record. The
+  GEval result.** Both runs are part of the v1.0.1 record. The
   point of the second judge is to give an honest second opinion when
   the primary table prompts the obvious question.
 - **Cross-judge disagreement is the methodology, not a bug.** A single
@@ -160,11 +160,11 @@ variable is the memory/retrieval layer.
 
 The 24 raw response transcripts, the locked criteria as scored, and
 the per-dimension scores will be released in this repository in a
-follow-up alongside the v1.0 Beta benchmark dataset. The summary
+follow-up alongside the v1.0.1 benchmark dataset. The summary
 table on [wisdomlayer.ai/benchmarks](https://wisdomlayer.ai/benchmarks)
 references the audit composite directly.
 
-For the broader v1.0 Beta methodology — the four primary metrics, the
+For the broader v1.0.1 methodology — the four primary metrics, the
 GEval rubrics, mode-aware judging — see
 [`fabrication_eval.md`](./fabrication_eval.md) and the public
 benchmark page.
@@ -186,7 +186,7 @@ issue on this repository or email `jeff@rhatigan.ai`.
   time" question is the atomic-fact recall + dream-cycle metrics on
   the primary benchmark page.
 
-The audit is one piece of the v1.0 Beta record. We publish it because
+The audit is one piece of the v1.0.1 record. We publish it because
 the second-judge result disagrees with the primary GEval result in a
 specific, explainable way — and the disagreement is exactly the kind
 of signal a serious buyer should want to see before believing any

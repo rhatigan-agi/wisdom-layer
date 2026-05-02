@@ -16,38 +16,46 @@ For the deferred-features roadmap, see the public CHANGELOG.
 
 ## At a glance
 
-| Capability | **Free** | **Pro** | **Enterprise** |
-|---|---|---|---|
-| Agent identity & lifecycle | Yes | Yes | Yes |
-| Tier 1 memory (raw events) | Yes | Yes | Yes |
-| Tier 2/3 memory (consolidation, reflection) | — | Yes | Yes |
-| Basic search (keyword + filters) | Yes | Yes | Yes |
-| Semantic search (vector embeddings) | — | Yes | Yes |
-| Directive view (read-only) | Yes | Yes | Yes |
-| Directive evolution (Critic-authored, lifecycle) | — | Yes | Yes |
-| Critic enforcement | — | Yes | Yes |
-| Atomic fact extraction (Beta, opt-in) | — | Yes | Yes |
-| Critic grounding verifier (Beta, opt-in) | — | Yes | Yes |
-| Dream cycles (manual + scheduled) | — | Yes | Yes |
-| Custom dream phases (plugin steps) | — | — | Yes |
-| Provenance — `trace` | — | Yes | Yes |
-| Provenance — `explain` & `export` | — | — | Yes |
-| Health analytics — basic stats | Yes | Yes | Yes |
-| Health analytics — `wisdom_score` + 30-day trajectory | — | Yes | Yes |
-| Health analytics — unlimited trajectory window | — | — | Yes |
-| Cost visibility (summary + per-cycle estimate) | — | Yes | Yes |
-| Cost CSV export | — | — | Yes |
-| Multi-LLM router (route across adapters by tier) | — | Yes | Yes |
-| Multi-agent mesh (shared pool, A2A comms) | — | — | Yes |
-| Cross-agent memory | — | — | Yes |
-| Cross-agent dream cycles | — | — | Yes |
-| Storage backends | SQLite | SQLite + Postgres | Any (custom adapters) |
-| **Agent count** | **3 (hard cap)** | **10 (advisory)** | **Unlimited** |
-| **Memories per agent** | **1,000 (hard cap)** | **Unlimited** | **Unlimited** |
-| **Messages / 30-day rolling** | **1,500 (hard cap)** | **Unlimited** | **Unlimited** |
-| Telemetry default | Opt-out (anonymous counts) | Off (opt-in) | Off (opt-in) |
-| Support | Docs + community | Email (~48hr) | SLA + advisory (5–10hr/mo) |
-| **Price** | **$0** | **$99/mo (Pro) · $249/mo (Team)** | **Starts at $24K/yr — contact sales** |
+Pro, Team, and Business share an identical SDK feature set — they
+differ only in seat count and shared billing scope. Enterprise adds
+the multi-agent mesh, deployment use-rights (customer-facing,
+multi-tenant, embedded, OEM, white-label, regulated), and contractual
+IP / audit / SLA terms.
+
+| Capability | **Free** | **Pro** | **Team** | **Business** | **Enterprise** |
+|---|---|---|---|---|---|
+| Agent identity & lifecycle | Yes | Yes | Yes | Yes | Yes |
+| Tier 1 memory (raw events) | Yes | Yes | Yes | Yes | Yes |
+| Tier 2/3 memory (consolidation, reflection) | — | Yes | Yes | Yes | Yes |
+| Basic search (keyword + filters) | Yes | Yes | Yes | Yes | Yes |
+| Semantic search (vector embeddings) | — | Yes | Yes | Yes | Yes |
+| Directive view (read-only) | Yes | Yes | Yes | Yes | Yes |
+| Directive evolution (Critic-authored, lifecycle) | — | Yes | Yes | Yes | Yes |
+| Critic enforcement | — | Yes | Yes | Yes | Yes |
+| Atomic fact extraction (Beta, opt-in) | — | Yes | Yes | Yes | Yes |
+| Critic grounding verifier (Beta, opt-in) | — | Yes | Yes | Yes | Yes |
+| Dream cycles (manual + scheduled) | — | Yes | Yes | Yes | Yes |
+| Custom dream phases (plugin steps) | — | — | — | — | Roadmap · v1.3.0 |
+| Provenance — `trace` | — | Yes | Yes | Yes | Yes |
+| Provenance — `explain` & `export` | — | — | — | — | Yes |
+| Health analytics — basic stats | Yes | Yes | Yes | Yes | Yes |
+| Health analytics — `wisdom_score` + trajectory | — | Yes | Yes | Yes | Yes |
+| Cost visibility (summary + per-cycle estimate) | — | Yes | Yes | Yes | Yes |
+| Cost CSV export | — | — | — | — | Yes |
+| Multi-LLM router (route across adapters by tier) | — | Yes | Yes | Yes | Yes |
+| Multi-agent mesh (shared pool, A2A comms) | — | — | — | — | Roadmap · v1.3.0 |
+| Cross-agent memory | — | — | — | — | Roadmap · v1.3.0 |
+| Cross-agent dream cycles | — | — | — | — | Roadmap · v1.3.0 |
+| Storage backends | SQLite | SQLite + Postgres | SQLite + Postgres | SQLite + Postgres | Any (custom adapters) |
+| **Developer seats** | **1** | **1** | **Up to 10** | **Up to 50** | **Unlimited** |
+| **Agent count** | **3 (hard cap)** | **Unlimited** | **Unlimited** | **Unlimited** | **Unlimited** |
+| **Memories per agent** | **1,000 (hard cap)** | **Unlimited** | **Unlimited** | **Unlimited** | **Unlimited** |
+| **Messages / 30-day rolling** | **1,500 (hard cap)** | **Unlimited** | **Unlimited** | **Unlimited** | **Unlimited** |
+| Customer-facing / multi-tenant / OEM / white-label rights | — | — | — | — | Yes |
+| Telemetry default | Opt-out (anonymous counts) | Off (opt-in) | Off (opt-in) | Off (opt-in) | Off · air-gappable |
+| Support | Docs + community | Email | Email · faster response | Email · priority response | Advisory + implementation |
+| **Price (monthly)** | **$0** | **$189/mo** | **$749/mo** | **$2,490/mo** | **From $36K/yr** |
+| **Price (annual)** | **$0** | **$1,890/yr (~17% off)** | **$6,990/yr (~22% off)** | **$22,500/yr (~25% off)** | **Annual contract** |
 
 Free includes a **14-day full Pro trial** on signup. See [Trial](#trial-14-day-pro).
 
@@ -89,7 +97,7 @@ for the full payload schema. `WL_TELEMETRY=0` disables.
 
 **Use rights:** Personal projects, evaluation, learning, internal
 exploration. **Not licensed for commercial production deployment** —
-see [License scope](#license-scope-pro-vs-enterprise).
+see [License scope](#license-scope-pro--team--business-vs-enterprise).
 
 ---
 
@@ -125,10 +133,10 @@ cognitive history you built carries forward unchanged into Pro.
 
 ## Pro — "Run the loop"
 
-**Pricing:** **$99/mo** (single seat) · **$249/mo Team** (up to 5 seats).
+**Pricing:** **$189/mo** or **$1,890/yr** (~17% off). **One (1) developer seat.**
 
-The full cognitive substrate for engineering teams running agents in
-production. Priced for individual developers and small teams.
+The full cognitive substrate for an individual engineer running agents
+in production. Priced for solo developers and consultants.
 
 **Everything in Free, plus:**
 
@@ -164,7 +172,7 @@ production. Priced for individual developers and small teams.
 
 **Capacity:**
 
-- 10 agents (advisory soft cap, not technically enforced)
+- Unlimited agents
 - Unlimited memories
 - Unlimited messages
 - On-demand and scheduled dream cycles
@@ -173,25 +181,81 @@ production. Priced for individual developers and small teams.
 customers buy privacy.
 
 **Use rights:** Internal tools and production systems your team
-operates. **Not licensed for customer-facing or multi-tenant
-deployments** — those require Enterprise. See
-[License scope](#license-scope-pro-vs-enterprise).
+operates. **Not licensed for customer-facing, multi-tenant, embedded,
+white-label, or OEM deployments** — those require Enterprise. See
+[License scope](#license-scope-pro--team--business-vs-enterprise).
 
-**Support:** Email (~48hr response) + private Discord channel.
+**Support:** Email (~48hr response).
+
+---
+
+## Team — "Run the loop, together"
+
+**Pricing:** **$749/mo** or **$6,990/yr** (~22% off). **Up to ten (10) developer seats** under one organization, with shared billing.
+
+Same SDK feature set as Pro. Built for engineering teams adopting
+Wisdom Layer across one team or product. License keys are issued
+per-organization and scoped to the seat count; installing on machines
+used by more than the licensed seat allowance is a breach of the EULA.
+
+**Everything in Pro**, with the same memory, reflection, storage,
+integration, observability, and capacity capabilities. The differences
+are commercial:
+
+- Up to ten (10) named developer seats under one organization
+- Shared billing under one invoice
+- Email support with faster response time
+
+**Use rights:** Internal tools and production systems your team
+operates. **Not licensed for customer-facing, multi-tenant, embedded,
+white-label, or OEM deployments** — those require Enterprise. See
+[License scope](#license-scope-pro--team--business-vs-enterprise).
+
+**Support:** Email · faster response.
+
+---
+
+## Business — "Run the loop across the org"
+
+**Pricing:** **$2,490/mo** or **$22,500/yr** (~25% off). **Up to fifty (50) developer seats** under one organization, with shared billing.
+
+Same SDK feature set as Pro and Team. Built for engineering
+organizations standardizing on Wisdom Layer across multiple internal
+teams. License keys are issued per-organization and scoped to the seat
+count; installing on machines used by more than the licensed seat
+allowance is a breach of the EULA.
+
+**Everything in Pro and Team**, with the same memory, reflection,
+storage, integration, observability, and capacity capabilities. The
+differences are commercial:
+
+- Up to fifty (50) named developer seats under one organization
+- Shared billing under one invoice
+- Email support with priority response time
+
+**Use rights:** Internal tools and production systems your organization
+operates. **Not licensed for customer-facing, multi-tenant, embedded,
+white-label, or OEM deployments** — those require Enterprise. See
+[License scope](#license-scope-pro--team--business-vs-enterprise).
+
+**Support:** Email · priority response.
 
 ---
 
 ## Enterprise — "Operate the loop at scale"
 
-**Pricing:** **Starts at $24K/yr — contact sales.** Custom-priced based
-on use case, deployment shape, and seat count.
+**Pricing:** **From $36,000/yr — annual contract, contact sales.**
+Custom-priced based on use case, deployment shape, and seat count.
 
-For teams running Wisdom Layer in customer-facing products, multi-tenant
-deployments, or regulated environments.
+**Required whenever an agent serves an end user other than the
+licensee** — including customer-facing products (one agent per end
+user), multi-tenant deployments, embedded / white-label / OEM
+distribution inside another product, and regulated environments that
+require contractual IP, audit, or SLA terms.
 
-**Everything in Pro, plus:**
+**Everything in Pro, Team, and Business, plus:**
 
-**Multi-agent coordination:**
+**Multi-agent coordination (Roadmap · v1.3.0):**
 
 - Multi-agent mesh (shared memory pools, agent-to-agent messaging)
 - Cross-agent memory with scoped access (private/shared/global)
@@ -201,8 +265,8 @@ deployments, or regulated environments.
 
 **Advanced reflection:**
 
-- Cross-agent dream cycles (org-level reflection)
-- Custom dream phases (define your own consolidation steps)
+- Cross-agent dream cycles (org-level reflection · Roadmap · v1.3.0)
+- Custom dream phases (define your own consolidation steps · Roadmap · v1.3.0)
 - Conflict surfacing with structured mediation
 - Goal hierarchy and alignment tracking
 
@@ -210,7 +274,6 @@ deployments, or regulated environments.
 
 - Provenance explain (narrated reasoning chains)
 - Provenance export (compliance archival)
-- Unlimited health trajectory window
 - Cost CSV export
 - GDPR Article 17 deletion primitives (already in core, contractually
   backed at Enterprise)
@@ -220,19 +283,23 @@ deployments, or regulated environments.
 - Any storage backend (custom adapters)
 - Multi-tenant deployment patterns
 - White-label and OEM rights
+- Air-gapped operation
 - Optional self-hosted dashboard
 
-**Capacity:** Unlimited everything.
+**Capacity:** Unlimited developer seats. Unlimited everything.
 
-**Telemetry:** Off by default. Optional opt-in. Audit-log surface for
+**Telemetry:** Off by default. Optional opt-in. May be disabled
+contractually for fully air-gapped deployments. Audit-log surface for
 compliance customers.
 
-**Use rights:** Customer-facing, multi-tenant, embedded deployments.
-Agents shipped inside products sold to third parties. Agents serving as
-the product itself. White-label and OEM use.
+**Use rights:** Customer-facing products (one agent per end user),
+multi-tenant deployments, embedded / white-label / OEM distribution
+inside another product, agents serving as the product itself, and
+regulated environments that require contractual IP, audit, or SLA
+terms.
 
-**Support:** SLA-backed (response times negotiated per contract),
-5–10 hours/month advisory, direct founder access for strategic
+**Support:** Advisory + implementation. SLA-backed (response times
+negotiated per contract), direct founder access for strategic
 questions, quarterly architecture review.
 
 ---
@@ -250,28 +317,33 @@ to Enterprise contact-sales.
 
 ---
 
-## License scope (Pro vs Enterprise)
+## License scope (Pro / Team / Business vs Enterprise)
 
-The technical feature gate distinguishes Free / Pro / Enterprise on what
-methods you can call (see the matrix above — Pro is feature-limited
-relative to Enterprise). **Use rights** are a separate, contractual
-layer on top of that.
+The technical feature gate distinguishes Free / Pro / Enterprise on
+what methods you can call (Pro, Team, and Business mint the same
+underlying `tier="pro"` JWT and share an identical SDK feature set —
+the matrix above shows Pro is feature-limited only relative to
+Enterprise). **Use rights** are a separate, contractual layer on top
+of that.
 
-- **Pro** is intended for **internal tools and production systems** —
-  agents your team operates and your team interacts with.
-- **Customer-facing, multi-tenant, or embedded deployments** (one agent
-  per end-user, agents shipped inside a product sold to third parties,
-  or agents serving as the product itself to your customers) require an
-  **Enterprise license**.
+- **Pro, Team, and Business** are licensed for **internal tools and
+  production systems** — agents your team operates and your team
+  interacts with. The three tiers differ only in seat count (1 / 10 /
+  50) and shared billing scope.
+- **Customer-facing, multi-tenant, embedded, white-label, or OEM
+  deployments** (one agent per end user, agents shipped inside a
+  product sold to third parties, or agents serving as the product
+  itself to your customers) require an **Enterprise license**.
 
 This boundary is contractual, not technical. The SDK does not gate you
 mid-cycle on agent count or deployment shape; the expectation is that
 teams operating at scale graduate to Enterprise voluntarily — usually
-because they need multi-tenant deployments, custom dream phases,
-provenance export, or SLA-backed support, all of which are
-Enterprise-tier capabilities.
+because they need customer-facing rights, multi-tenant deployments,
+custom dream phases, provenance export, or SLA-backed support, all of
+which are Enterprise-tier capabilities.
 
-If you are unsure whether your deployment fits Pro or Enterprise, email
+If you are unsure whether your deployment fits Pro / Team / Business or
+Enterprise, email
 [jeff@rhatigan.ai](mailto:jeff@rhatigan.ai) with a one-paragraph
 description of the use case.
 
@@ -282,6 +354,11 @@ description of the use case.
 These are the exact strings the SDK's compiled feature gate checks. Tool
 authors and integrators may use them when building tier-aware UI; they
 are stable across v1.x.
+
+The runtime gate recognizes three feature sets — **Free**, **Pro**, and
+**Enterprise**. The commercial Team and Business tiers mint the same
+underlying `tier="pro"` JWT and therefore unlock the Pro feature set;
+they differ only in licensed seat count and shared billing scope.
 
 ### Free
 - `agent_identity`

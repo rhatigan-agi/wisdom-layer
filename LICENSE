@@ -20,9 +20,12 @@ Copyright (c) 2026 Rhatigan AGI LLC (d/b/a Rhatigan Labs). All rights reserved.
    licensing service that, when supplied to the Software at runtime,
    determines which tier of features the Licensee may use.
 
-   "Tier" means the feature set unlocked by a given License Key:
-   Free, Pro, or Enterprise. Tier limits are enforced at runtime by
-   the Software.
+   "Tier" means the feature set and use rights unlocked by a given
+   License Key: Free, Pro, Team, Business, or Enterprise. Tier limits
+   are enforced at runtime by the Software; tier-conditioned use
+   rights (including but not limited to customer-facing, multi-tenant,
+   embedded, white-label, and OEM deployment rights) are governed by
+   this License and the applicable subscription agreement.
 
 2. GRANT
 
@@ -35,15 +38,31 @@ Copyright (c) 2026 Rhatigan AGI LLC (d/b/a Rhatigan Labs). All rights reserved.
 3. TIER LIMITS
 
    Free Tier: permitted for personal, evaluation, and small-scale
-   production use subject to the runtime-enforced limits documented
-   at https://wisdomlayer.ai/pricing. To upgrade to Pro or Enterprise,
-   visit https://wisdomlayer.ai/pricing or contact jeff@rhatigan.ai.
+   internal use subject to the runtime-enforced limits documented at
+   https://wisdomlayer.ai/pricing. To upgrade, visit
+   https://wisdomlayer.ai/pricing or contact jeff@rhatigan.ai.
 
-   Pro and Enterprise Tiers: governed by the subscription agreement
-   between Licensee and Rhatigan AGI LLC. Seat counts, agent counts,
-   and feature access follow the active subscription; Licensee's
-   License Key is revoked on material non-payment after the grace
-   period set forth in that agreement.
+   Pro, Team, and Business Tiers: licensed for internal tools and
+   production systems the Licensee operates; Pro is one (1) developer
+   seat, Team is up to ten (10) seats, Business is up to fifty (50)
+   seats; all three share an identical SDK feature set. Customer-
+   facing, multi-tenant, embedded, white-label, OEM, or otherwise
+   end-user-serving deployments require an Enterprise license.
+   Governed by the subscription agreement between Licensee and
+   Rhatigan AGI LLC. Seat counts, agent counts, and feature access
+   follow the active subscription; Licensee's License Key is revoked
+   on material non-payment after the grace period set forth in that
+   agreement.
+
+   Enterprise Tier: required whenever an agent serves an end user
+   other than the Licensee, including customer-facing products,
+   multi-tenant deployments, embedded / white-label / OEM
+   distribution inside another product, and regulated environments
+   that require contractual intellectual-property, audit, or service-
+   level terms. Includes unlimited developer seats, custom storage
+   backends, air-gapped operation, and the contractual terms set
+   forth in the applicable master services agreement. Negotiated per
+   contract.
 
 4. RESTRICTIONS
 
@@ -116,9 +135,9 @@ Copyright (c) 2026 Rhatigan AGI LLC (d/b/a Rhatigan Labs). All rights reserved.
 11. ENTIRE AGREEMENT
 
     This License (together with any applicable subscription
-    agreement for Pro or Enterprise Tiers) is the entire agreement
-    between Licensee and Rhatigan AGI LLC concerning the Software,
-    and supersedes all prior agreements on the subject.
+    agreement for Pro, Team, Business, or Enterprise Tiers) is the
+    entire agreement between Licensee and Rhatigan AGI LLC concerning
+    the Software, and supersedes all prior agreements on the subject.
 
 -----------------------------------------------------------------------
 

@@ -158,7 +158,7 @@ release.
 | Concept | What It Does |
 |---|---|
 | **Provenance** | Append-only audit trail of every mutation -- captures, directive lifecycle, dream phases, snapshots. `agent.provenance.trace()` for any entity, `.explain()` (Enterprise) for narrated chains, `.export()` (Enterprise) for compliance archival |
-| **Health Trajectory** | Composite `wisdom_score` (0-1) snapshotted daily, cognitive-state classifier (healthy / stagnant / drifting / overloaded), and longitudinal trajectory: 30-day window on Pro, unlimited on Enterprise |
+| **Health Trajectory** | Composite `wisdom_score` (0-1) snapshotted daily, cognitive-state classifier (healthy / stagnant / drifting / overloaded), and longitudinal trajectory window across paid tiers |
 | **BudgetGuard** | Hard-enforced spend ceilings on three windows -- daily, monthly, per-cycle. Calls fail at the cap, not warnings in a log. Pre-flight cost estimation for dream cycles. CSV export on Enterprise |
 
 ### Trust & Enforcement
@@ -483,22 +483,30 @@ import from it and expect minor-version stability.
 
 ## License Tiers
 
-| | **Free** | **Pro** | **Enterprise** |
-|---|---|---|---|
-| Memory | Tier 1 (raw) | Tier 1–3 + semantic search | Tier 1–3 + semantic search |
-| Dream Cycles | — | On-demand + scheduled | + custom phases |
-| Critic / Directives | View directives only | Full lifecycle + Critic | Full lifecycle + Critic |
-| Provenance | — | `trace` | `trace` + `explain` + `export` |
-| Health Analytics | Basic stats | `wisdom_score` + 30-day trajectory | + unlimited trajectory |
-| Cost Visibility | — | Summary + estimate | + CSV export |
-| Multi-Agent Mesh / cross-agent memory | — | — | Yes |
-| Agents | **3 (hard cap)** | 10 (advisory) | Unlimited |
-| Memories per agent | **1,000 (hard cap)** | Unlimited | Unlimited |
-| Messages / 30-day rolling | **1,500 (hard cap)** | Unlimited | Unlimited |
-| Storage | SQLite | Postgres + SQLite | Any (custom adapters) |
-| Telemetry default | Opt-out (anonymous counts) | Off (opt-in) | Off (opt-in) |
-| Support | Docs + community | Email (~48hr) | SLA + advisory |
-| **Price** | **$0** | **$99/mo · Team $249/mo** | **Starts at $24K/yr — contact sales** |
+Pro, Team, and Business share an identical SDK feature set — they
+differ only in licensed seat count (1 / 10 / 50) and shared billing
+scope. Enterprise adds the multi-agent mesh, deployment use-rights
+(customer-facing, multi-tenant, embedded, OEM, white-label, regulated),
+and contractual IP / audit / SLA terms.
+
+| | **Free** | **Pro** | **Team** | **Business** | **Enterprise** |
+|---|---|---|---|---|---|
+| Memory | Tier 1 (raw) | Tier 1–3 + semantic | Tier 1–3 + semantic | Tier 1–3 + semantic | Tier 1–3 + semantic |
+| Dream Cycles | — | On-demand + scheduled | On-demand + scheduled | On-demand + scheduled | + custom phases (roadmap · v1.3.0) |
+| Critic / Directives | View only | Full lifecycle | Full lifecycle | Full lifecycle | Full lifecycle |
+| Provenance | — | `trace` | `trace` | `trace` | `trace` + `explain` + `export` |
+| Cost Visibility | — | Summary + estimate | Summary + estimate | Summary + estimate | + CSV export |
+| Multi-agent mesh / cross-agent memory | — | — | — | — | Roadmap · v1.3.0 |
+| Customer-facing / multi-tenant / OEM / white-label rights | — | — | — | — | Yes |
+| Developer seats | 1 | 1 | Up to 10 | Up to 50 | Unlimited |
+| Agents | **3 (hard cap)** | Unlimited | Unlimited | Unlimited | Unlimited |
+| Memories per agent | **1,000 (hard cap)** | Unlimited | Unlimited | Unlimited | Unlimited |
+| Messages / 30-day rolling | **1,500 (hard cap)** | Unlimited | Unlimited | Unlimited | Unlimited |
+| Storage | SQLite | Postgres + SQLite | Postgres + SQLite | Postgres + SQLite | Any (custom adapters) |
+| Telemetry default | Opt-out (anonymous counts) | Off (opt-in) | Off (opt-in) | Off (opt-in) | Off · air-gappable |
+| Support | Docs + community | Email | Email · faster | Email · priority | Advisory + implementation |
+| **Price (monthly)** | **$0** | **$189/mo** | **$749/mo** | **$2,490/mo** | **From $36K/yr** |
+| **Price (annual)** | **$0** | **$1,890/yr** (~17% off) | **$6,990/yr** (~22% off) | **$22,500/yr** (~25% off) | Annual contract |
 
 **14-day full Pro trial on signup.** Every Free signup includes a 14-day
 trial with all caps lifted and the full Pro substrate unlocked. No

@@ -19,7 +19,8 @@ runtime, not whether you agree to the license itself.
 
 - Install Wisdom Layer into your own applications.
 - Use it for personal, evaluation, or commercial purposes, within
-  the limits of your active tier (Free / Pro / Team / Enterprise).
+  the limits of your active tier (Free / Pro / Team / Business /
+  Enterprise).
 - Ship your own product that integrates Wisdom Layer, provided you
   do not redistribute the Wisdom Layer wheel itself.
 
@@ -45,16 +46,33 @@ runtime, not whether you agree to the license itself.
   and production systems** your team operates and your team interacts
   with. Customer-facing, multi-tenant, embedded, white-label, or OEM
   deployments require an Enterprise license.
-- **Team Tier.** Up to five (5) named developer seats under one
+- **Team Tier.** Up to ten (10) named developer seats under one
   organization, with shared billing. Same SDK feature set and same
   use rights as Pro: licensed for internal tools and production
   systems your team operates. Customer-facing, multi-tenant, embedded,
   white-label, or OEM deployments require an Enterprise license.
-  License keys are issued per-seat and are not transferable; sharing
-  a key beyond the seat allowance is a breach of these Terms.
-- **Enterprise Tier.** Licensed for customer-facing, multi-tenant,
-  embedded, white-label, and OEM deployments, including agents shipped
-  inside products sold to third parties.
+  License keys are issued per-organization and are scoped to the seat
+  count; installing on machines used by more than the licensed seat
+  allowance is a breach of these Terms.
+- **Business Tier.** Up to fifty (50) named developer seats under one
+  organization, with shared billing. Built for engineering
+  organizations standardizing on Wisdom Layer across multiple internal
+  teams. Same SDK feature set and same use rights as Pro and Team:
+  licensed for internal tools and production systems the licensee
+  operates. Customer-facing, multi-tenant, embedded, white-label, or
+  OEM deployments require an Enterprise license. License keys are
+  issued per-organization and are scoped to the seat count; installing
+  on machines used by more than the licensed seat allowance is a
+  breach of these Terms.
+- **Enterprise Tier.** Required whenever an agent serves an end user
+  other than the licensee. Licensed for customer-facing products
+  (one agent per end user), multi-tenant deployments, embedded /
+  white-label / OEM distribution inside another product, and
+  regulated environments that require contractual IP, audit, or SLA
+  terms. Includes unlimited developer seats, custom storage backends,
+  air-gapped operation, custom dream phases, dedicated support, and
+  the contractual IP / audit / SLA terms described in your master
+  services agreement. Negotiated per contract.
 - **14-Day Pro Trial.** Every new Free signup includes a 14-day full
   Pro trial with all Free capacity caps lifted and Pro-tier features
   unlocked. The trial is bounded by signed JWT claims (`trial_ends_at`
@@ -62,9 +80,15 @@ runtime, not whether you agree to the license itself.
   automatically. No payment information is required to start a trial,
   and no payment is taken at trial expiry. The trial is non-recurring
   and non-extendable; one trial per email address.
-- **Pro / Team / Enterprise Tiers.** Governed by your subscription
-  agreement. Your license key is revoked on non-payment after the
-  grace period in that agreement.
+- **Pro / Team / Business / Enterprise Tiers.** Governed by your
+  subscription agreement (Pro, Team, and Business are billed monthly
+  or annually at your election; Enterprise is billed annually per
+  contract). Your license key is revoked on non-payment after the
+  grace period in that agreement. On voluntary downgrade or
+  cancellation, accumulated memories, facts, and directives are
+  preserved on disk; paid-tier features (dream cycles, critic, full
+  directive lifecycle, Tier 2/3 memory) stop running and Free caps
+  re-engage.
 
 ## 5. Data handling
 
@@ -83,8 +107,8 @@ SDK transmits two things over the network beyond your own LLM calls:
 By default:
 
 - **Free tier:** anonymous usage telemetry is **enabled** (opt-out).
-- **Pro and Team tiers:** telemetry is **disabled** by default
-  (opt-in only).
+- **Pro, Team, and Business tiers:** telemetry is **disabled** by
+  default (opt-in only).
 - **Enterprise tier:** telemetry is **disabled** by default and may
   be disabled contractually for fully air-gapped deployments.
 
@@ -101,9 +125,9 @@ Telemetry can be disabled at any time by setting `WL_TELEMETRY=0` in
 the process environment, or by running `wisdom-layer telemetry off`,
 which adds your `install_id` to a server-side deny-list and queues
 existing rows for deletion within thirty (30) days. Setting
-`WL_TELEMETRY=1` opts a Pro, Team, or Enterprise install into
-telemetry on a goodwill basis; there is no pricing concession for
-opting in.
+`WL_TELEMETRY=1` opts a Pro, Team, Business, or Enterprise install
+into telemetry on a goodwill basis; there is no pricing concession
+for opting in.
 
 **Retention.** Raw telemetry events are retained for twelve (12)
 months after `received_at`, after which raw rows are deleted and

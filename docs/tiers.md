@@ -18,9 +18,9 @@ For the deferred-features roadmap, see the public CHANGELOG.
 
 Pro, Team, and Business share an identical SDK feature set — they
 differ only in seat count and shared billing scope. Enterprise adds
-the multi-agent mesh, deployment use-rights (customer-facing,
-multi-tenant, embedded, OEM, white-label, regulated), and contractual
-IP / audit / SLA terms.
+the multi-agent workspace (coming soon · v1.2.0), deployment use-rights
+(customer-facing, multi-tenant, embedded, OEM, white-label, regulated),
+and contractual IP / audit / SLA terms.
 
 | Capability | **Free** | **Pro** | **Team** | **Business** | **Enterprise** |
 |---|---|---|---|---|---|
@@ -43,8 +43,8 @@ IP / audit / SLA terms.
 | Cost visibility (summary + per-cycle estimate) | — | Yes | Yes | Yes | Yes |
 | Cost CSV export | — | — | — | — | Yes |
 | Multi-LLM router (route across adapters by tier) | — | Yes | Yes | Yes | Yes |
-| Multi-agent mesh (shared pool, A2A comms) | — | — | — | — | Roadmap · v1.3.0 |
-| Cross-agent memory | — | — | — | — | Roadmap · v1.3.0 |
+| Multi-agent mesh (shared pool, A2A comms) | — | — | — | — | Coming soon · v1.2.0 |
+| Cross-agent memory | — | — | — | — | Coming soon · v1.2.0 |
 | Cross-agent dream cycles | — | — | — | — | Roadmap · v1.3.0 |
 | Storage backends | SQLite | SQLite + Postgres | SQLite + Postgres | SQLite + Postgres | Any (custom adapters) |
 | **Developer seats** | **1** | **1** | **Up to 10** | **Up to 50** | **Unlimited** |
@@ -255,13 +255,13 @@ require contractual IP, audit, or SLA terms.
 
 **Everything in Pro, Team, and Business, plus:**
 
-**Multi-agent coordination (Roadmap · v1.3.0):**
+**Multi-agent coordination (Coming soon · v1.2.0):**
 
-- Multi-agent mesh (shared memory pools, agent-to-agent messaging)
+- Multi-agent workspace (shared memory pool, agent directory)
 - Cross-agent memory with scoped access (private/shared/global)
 - Inter-agent perspective layer (per-agent framing of shared events)
-- Cross-agent critic (catch contradictions across the agent graph)
-- Voting and proposal subsystem with domain-authority weighting
+- Cross-agent critic (catch contradictions across the agent graph · Roadmap · v1.3.0)
+- Voting and proposal subsystem with domain-authority weighting (Roadmap · v1.3.0)
 
 **Advanced reflection:**
 
@@ -306,14 +306,15 @@ questions, quarterly architecture review.
 
 ## Free has independent agents, not a mesh
 
-Free supports up to **3 independent agents**. Multi-agent coordination,
-shared memory pools, inter-agent messaging, cross-agent critic, and
-cross-agent dream cycles all require **Enterprise**. On Free, three
-agents means three isolated cognitive contexts that do not communicate.
+Free supports up to **3 independent agents**. Multi-agent coordination
+requires **Enterprise** — the multi-agent workspace (shared memory pool,
+agent directory) arrives in v1.2.0; cross-agent critic and dream cycles
+follow in v1.3.0. On Free, three agents means three isolated cognitive
+contexts that do not communicate.
 
-If a Free user calls a multi-agent primitive, the SDK raises
-`TierRestrictionError(feature='multi_agent_mesh')` with the deep link
-to Enterprise contact-sales.
+When multi-agent ships, Free users calling a workspace primitive will
+receive `TierRestrictionError(feature='multi_agent_mesh')` with a deep
+link to Enterprise contact-sales.
 
 ---
 

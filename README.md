@@ -1,6 +1,6 @@
 <div align="center">
 
-<img src="docs/assets/wisdom_wordmark.png" width="420" alt="Wisdom Layer SDK" />
+<img src="https://raw.githubusercontent.com/rhatigan-agi/wisdom-layer/main/docs/assets/wisdom_wordmark.png" width="420" alt="Wisdom Layer SDK" />
 
 ### Cognitive architecture for AI agents that learn, reflect, and develop wisdom over time.
 

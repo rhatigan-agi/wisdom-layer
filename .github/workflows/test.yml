@@ -79,7 +79,7 @@ jobs:
       # flags as unpinned even with `@version`) while keeping the same
       # permissive ruleset.
       - name: Lint markdown
-        uses: DavidAnson/markdownlint-cli2-action@eb5ca3ab411449c66620fe7f1b3c9e10547144b0  # v18.0.0
+        uses: DavidAnson/markdownlint-cli2-action@6b51ade7a9e4a75a7ad929842dd298a3804ebe8b  # v23.1.0
         with:
           config: .github/.markdownlint.json
           globs: |

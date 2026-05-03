@@ -355,6 +355,124 @@ display = await agent.status_display()
 print(display)
 ```
 
+## Multi-agent workspace (Enterprise)
+
+Three agents share a workspace, one shares a memory, one runs a Team
+Dream cycle synthesizing a team insight, and another walks the
+provenance back to the contributing private memory id. Requires an
+Enterprise license key.
+
+```python
+import asyncio
+
+from wisdom_layer import WisdomAgent
+from wisdom_layer.storage import SQLiteBackend
+from wisdom_layer.workspace import (
+    Visibility,
+    Workspace,
+    WorkspaceSQLiteBackend,
+)
+
+async def main() -> None:
+    # 1. One workspace; three per-agent backends.
+    workspace = Workspace(
+        workspace_id="team-alpha",
+        name="Team Alpha",
+        api_key="wl_ent_…",
+        backend=WorkspaceSQLiteBackend("workspace.db"),
+    )
+    await workspace.initialize()
+
+    planner = WisdomAgent(
+        agent_id="planner",
+        llm=model,
+        backend=SQLiteBackend("planner.db"),
+    )
+    critic = WisdomAgent(
+        agent_id="critic",
+        llm=model,
+        backend=SQLiteBackend("critic.db"),
+    )
+    writer = WisdomAgent(
+        agent_id="writer",
+        llm=model,
+        backend=SQLiteBackend("writer.db"),
+    )
+    for a in (planner, critic, writer):
+        await a.initialize()
+
+    await workspace.register_agent(planner, capabilities=["planner"])
+    await workspace.register_agent(critic,  capabilities=["critic"])
+    await workspace.register_agent(writer,  capabilities=["writer"])
+
+    # 2. The planner discovers something useful and shares it.
+    captured = await planner.memory.capture(
+        "lesson",
+        {"text": "Three small specs land in production faster than one big one."},
+    )
+    shared_id = await planner.memory.share(
+        captured.memory_id,
+        visibility=Visibility.TEAM,
+        reason="Pattern worth other agents seeing",
+    )
+
+    # 3. The critic endorses; the workspace pool ranks it.
+    await workspace.pool.endorse(
+        shared_memory_id=shared_id,
+        agent_id="critic",
+        reason="Confirmed against past launch retros",
+    )
+
+    # 4. A Team Dream cycle synthesizes a team insight.
+    insight = await workspace.pool.synthesize_team_insight(
+        content="Small, well-scoped specs ship faster than monoliths.",
+        contributing_shared_memory_ids=[shared_id],
+        salience=0.7,
+    )
+
+    # 5. The writer walks the provenance back across the agent boundary.
+    walk = await writer.provenance.walk_xagent(insight.id)
+    for c in walk.contributions:
+        print(
+            c.contributor_id,        # "planner"
+            c.shared_memory_id,      # the pool id
+            c.source_memory_id,      # back-pointer into planner.db
+            c.team_score,
+        )
+        # `c.source_memory_id` is opaque here — only the planner can
+        # dereference it via planner.memory.get(c.source_memory_id).
+
+    for a in (planner, critic, writer):
+        await a.close()
+    await workspace.close()
+
+
+asyncio.run(main())
+```
+
+The shared pool stores back-references, never copies. The provenance
+walk surfaces the contributor's `source_memory_id` so the contributing
+agent can dereference it locally — but the workspace itself can never
+read another agent's private memory.
+
+LLMs reach the messaging surface via tool use:
+
+```python
+from wisdom_layer.workspace import WORKSPACE_TOOLS, execute_tool
+
+# Stamp WORKSPACE_TOOLS into the LLM's tool list. When a tool-use
+# block comes back, route it through execute_tool:
+result = await execute_tool(
+    agent=writer,
+    name=tool_use.name,
+    arguments=tool_use.input,
+)
+```
+
+See [api-reference.md](api-reference.md#multi-agent-workspace--enterprise)
+for the full multi-agent surface, and [tiers.md](tiers.md#enterprise--operate-the-loop-at-scale)
+for what's gated behind Enterprise.
+
 ## Anonymous Telemetry
 
 By default, Free-tier installs send a single anonymous count-payload

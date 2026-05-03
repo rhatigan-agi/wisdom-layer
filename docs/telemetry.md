@@ -244,7 +244,7 @@ For enterprise security review:
   ```
 
 If your security review requires a sworn statement of contents or a
-DPA, contact [jeff@rhatigan.ai](mailto:jeff@rhatigan.ai).
+DPA, contact [governance@wisdomlayer.ai](mailto:governance@wisdomlayer.ai).
 
 ---
 

@@ -25,7 +25,7 @@ a suspected vulnerability.**
 
 ### Contact
 
-- **Email:** `jeff@rhatigan.ai`
+- **Email:** `security@wisdomlayer.ai`
 - **GitHub Security Advisories:** use the "Report a vulnerability" button
   in the repository's Security tab
 
@@ -112,5 +112,5 @@ Subject access (Article 15) and portability (Article 20) are served by
 
 ## Security Contacts
 
-- **Primary:** `jeff@rhatigan.ai`
+- **Primary:** `security@wisdomlayer.ai`
 - **Fallback:** GitHub Security Advisories on this repository

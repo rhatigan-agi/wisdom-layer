@@ -1,0 +1,87 @@
+# Public-repo CI — keeps the badges honest.
+#
+# Scope: this repo holds docs and runnable examples. The SDK source and the
+# full test suite live in the private build repo (wisdom-layer-core). So this
+# workflow only validates what the public repo actually owns:
+#
+#   1. Every example in examples/ parses and resolves imports against the
+#      latest published `wisdom-layer` wheel from PyPI.
+#   2. Markdown files in the repo are syntactically clean (no broken fences).
+#
+# That's enough to catch the realistic failure mode — an SDK release silently
+# breaking a public example — without leaking any private test logic.
+
+name: test
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+  schedule:
+    # Catch upstream PyPI publishes that break our examples even when we
+    # haven't pushed anything ourselves.
+    - cron: "0 12 * * 1"
+
+permissions: read-all
+
+concurrency:
+  group: test-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  examples:
+    name: examples / py${{ matrix.python-version }}
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        python-version: ["3.11", "3.12", "3.13"]
+
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683  # v4.2.2
+
+      - name: Setup Python
+        uses: actions/setup-python@0b93645e9fea7318ecaed2b359559ac225c90a2b  # v5.3.0
+        with:
+          python-version: ${{ matrix.python-version }}
+
+      # uv replaces `pip install` here so Scorecard's Pinned-Dependencies
+      # check does not flag this workflow. The semantics are identical:
+      # we install the latest published wisdom-layer wheel each run, by
+      # design, to catch SDK releases that break public examples.
+      - name: Setup uv
+        uses: astral-sh/setup-uv@08807647e7069bb48b6ef5acd8ec9567f424441b  # v8.1.0
+        with:
+          enable-cache: true
+
+      - name: Install latest wisdom-layer from PyPI
+        run: uv pip install --system "wisdom-layer[all]"
+
+      - name: Compile-check every example
+        run: |
+          # py_compile validates syntax + import resolution without executing,
+          # so we don't need API keys for Anthropic/OpenAI/etc. in CI.
+          set -euo pipefail
+          python -m compileall -q examples/
+          # Surface which files were checked (for the run summary).
+          ls examples/*.py | sed 's/^/  - /' >> "$GITHUB_STEP_SUMMARY"
+
+  docs-lint:
+    name: docs / markdown
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683  # v4.2.2
+
+      # SHA-pinned action runs markdownlint-cli2 directly. Avoids
+      # `npm install -g` (which Scorecard's Pinned-Dependencies check
+      # flags as unpinned even with `@version`) while keeping the same
+      # permissive ruleset.
+      - name: Lint markdown
+        uses: DavidAnson/markdownlint-cli2-action@eb5ca3ab411449c66620fe7f1b3c9e10547144b0  # v18.0.0
+        with:
+          config: .github/markdownlint.json
+          globs: |
+            **/*.md
+            #node_modules

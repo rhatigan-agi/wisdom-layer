@@ -75,6 +75,7 @@ agent = WisdomAgent(
 | `agent.provenance` | `ProvenanceInterface` | Trace, explain, export |
 | `agent.facts` | `FactsInterface` | Extract, search, list_for_subject, verify_claim *(Beta — Pro+, opt-in)* |
 | `agent.cost` | `CostInterface` | Summary, estimate_dream, export |
+| `agent.messages` | `MessagesInterface` | Send, broadcast, reply, check_inbox, list_thread, list_agents, mark_read, close_thread *(Enterprise — workspace-bonded only)* |
 
 ### `SyncWisdomAgent`
 
@@ -188,6 +189,37 @@ GDPR Article 17: delete all memories containing a subject.
 ### `agent.memory.export_subject(subject_id)`
 
 GDPR Articles 15/20: export all memories containing a subject.
+
+### `agent.memory.share(memory_id, *, visibility=Visibility.TEAM, reason="")` — **(Enterprise)**
+
+Promote one of *this agent's* memories into the workspace's
+`SharedMemoryPool`. Bridge from the per-agent backend (where the
+memory lives) into the workspace pool (where it becomes visible to
+other agents). The id-based contract preserves the patent-defensible
+isolation invariant: callers reference an id, never an object, and
+the bridge tenant-checks the id against this agent's backend before
+promotion.
+
+The contributing memory itself is **not copied** — the pool stores a
+back-reference (`source_memory_id`) that only the contributing agent
+can dereference. Compromising `workspace.db` never exposes private
+memory content.
+
+**Args:**
+- `memory_id: str` — Must belong to this agent. A foreign id raises
+  `ValueError` (tenancy guard).
+- `visibility: Visibility` — `TEAM` (default; visible to all workspace
+  agents) or `PUBLIC`. `PRIVATE` raises `ValueError`.
+- `reason: str` — Free-form rationale, surfaces in dashboards and the
+  cross-agent provenance log.
+
+**Returns:** `str` — The deterministic 16-char hex `shared_memory_id`.
+Idempotent — re-sharing returns the same id.
+
+**Raises:**
+- `RuntimeError` — Agent is not registered to a workspace.
+- `ValueError` — Memory id does not exist for this agent, or
+  `visibility=Visibility.PRIVATE`.
 
 ---
 
@@ -510,6 +542,31 @@ Time-windowed provenance dump as JSON bundle.
 
 **Returns:** `dict[str, object]`
 
+### `agent.provenance.walk_xagent(team_insight_id)` — **(Enterprise)**
+
+Walk the cross-agent provenance edge for a team insight. Returns the
+team insight, the contributing `SharedMemory` rows, and each
+contribution's `source_memory_id` back-pointer into the contributor's
+per-agent backend.
+
+The walk **does not — and cannot — dereference any
+`source_memory_id`.** Only the contributing agent itself can resolve
+those ids via its own `agent.memory.get(memory_id)`. The patent-
+defensible isolation invariant is encoded in the type system:
+`TeamInsightProvenance` and `ProvenanceContribution` carry no field
+for cross-agent private content.
+
+**Args:**
+- `team_insight_id: str` — The id of the team insight to walk.
+
+**Returns:** `TeamInsightProvenance` with `insight`, ordered
+`contributions: list[ProvenanceContribution]`.
+
+**Raises:**
+- `RuntimeError` — Agent is not registered to a workspace.
+- `LookupError` — `team_insight_id` does not resolve in the workspace
+  pool.
+
 ---
 
 ## Health
@@ -564,6 +621,240 @@ Pre-flight estimate of next dream cycle cost.
 CSV dump of the cost ledger.
 
 **Returns:** `str` (CSV)
+
+---
+
+## Multi-agent workspace — **(Enterprise)**
+
+The workspace surface is the shared backend that holds all cross-agent
+state for a single multi-agent deployment: agent directory, shared
+memory pool, team insights, cross-agent provenance events, and the
+agent message bus. Per-agent state continues to live in each
+`WisdomAgent`'s own backend — the workspace never copies private
+content. Workspace construction validates an Enterprise license; Free
+/ Pro keys raise `TierRestrictionError` at `Workspace.initialize()`.
+
+```python
+from wisdom_layer.workspace import (
+    Workspace,
+    WorkspaceSQLiteBackend,
+)
+
+backend = WorkspaceSQLiteBackend("workspace.db")
+workspace = Workspace(
+    workspace_id="team-alpha",
+    name="Team Alpha",
+    api_key="wl_ent_…",
+    backend=backend,
+    config={"max_agents": 50},  # optional cap
+)
+await workspace.initialize()
+
+await workspace.register_agent(planner_agent, capabilities=["planner"])
+await workspace.register_agent(critic_agent,  capabilities=["critic"])
+```
+
+### `Workspace`
+
+```python
+Workspace(
+    workspace_id: str,
+    name: str,
+    api_key: str,                          # must mint Enterprise tier
+    backend: BaseWorkspaceBackend,
+    config: dict[str, object] | None = None,
+    feature_flags: dict[str, bool] | None = None,
+    clock: Clock | None = None,
+)
+```
+
+| Attribute | Interface | Description |
+|---|---|---|
+| `workspace.directory` | `AgentDirectory` | Read-only roster (`list`, `get`, async iteration). |
+| `workspace.pool` | `SharedMemoryPool` | Cross-agent memory pool. |
+| `workspace.messages` | `MessageBus` | Agent-to-agent message bus. |
+
+| Method | Returns | Description |
+|---|---|---|
+| `await workspace.initialize()` | `None` | Validate Enterprise license, run workspace migrations, persist the workspace row, emit `workspace.initialized`. |
+| `await workspace.register_agent(agent, *, capabilities=None)` | `None` | Add or reactivate an agent in the directory. Re-registering an active agent updates capabilities without consuming a `max_agents` slot. |
+| `await workspace.unregister_agent(agent_id)` | `None` | Soft-archive a directory row (sets `archived_at`). Re-registering clears the field. |
+| `await workspace.close()` | `None` | Close the backend; emit `workspace.closed`. |
+
+### `AgentDirectory`
+
+Read-only view of the registered agents. Returned by
+`workspace.directory`.
+
+```python
+records = await workspace.directory.list(
+    capability="planner",          # optional capability filter
+    active_within=timedelta(days=1),  # optional liveness filter
+    include_archived=False,          # default
+)
+```
+
+| Method | Returns | Description |
+|---|---|---|
+| `directory.list(*, capability=None, active_within=None, include_archived=False)` | `list[AgentRecord]` | Filtered roster. |
+| `directory.get(agent_id)` | `AgentRecord \| None` | Includes archived rows so callers can distinguish "never registered" from "since unregistered". |
+| `async for record in directory:` | iterator | Active (non-archived) agents in registration order. |
+
+`AgentRecord` fields: `workspace_id`, `agent_id`, `capabilities`,
+`registered_at`, `last_seen_at`, `past_success_rate` (schema ships at
+`0.0` in v1.2.0; closed-loop writer lands in v1.3.0), `archived_at`.
+
+### `SharedMemoryPool`
+
+Workspace-scoped pool that holds back-references to contributing
+agents' private memories. Returned by `workspace.pool`.
+
+| Method | Description |
+|---|---|
+| `pool.promote(*, contributor_id, source_memory_id, content, visibility, reason, base_score)` | Idempotent promotion; returns deterministic 16-char hex `shared_memory_id`. Most callers reach this through `agent.memory.share()` instead of directly. |
+| `pool.endorse(*, shared_memory_id, agent_id, reason="")` | Atomic endorsement; composite PK + INSERT OR IGNORE makes it idempotent per agent. |
+| `pool.contest(*, shared_memory_id, agent_id, reason="")` | Atomic contention; same idempotency shape as `endorse`. |
+| `pool.list_shared(*, capability=None, contributor_id=None, exclude_contributor_id=None, visibility_in=None, limit=50)` | Filtered listing. `contributor_id` and `exclude_contributor_id` together raise `ValueError`. |
+| `pool.search(query, *, limit=10)` | Substring + ranked-by-team-score search. |
+| `pool.synthesize_team_insight(content, *, contributing_shared_memory_ids, salience=0.5)` | Persist a team insight that aggregates contributing rows. |
+| `pool.walk_provenance(team_insight_id)` | Returns `TeamInsightProvenance` with contributions back to each contributor's `source_memory_id`. Most callers reach this through `agent.provenance.walk_xagent()`. |
+
+### `MessageBus`
+
+Workspace-wide agent-to-agent message bus. Returned by
+`workspace.messages`. Most callers reach the bus through
+`agent.messages.*`, which auto-fills `sender_id` and reads
+`recipient_capabilities` from the directory (impersonation /
+stale-view guards).
+
+| Method | Description |
+|---|---|
+| `bus.send(*, sender_id, recipient_id, content, purpose=MessagePurpose.QUESTION, related_memory_ids=None, related_task_id=None, expects_reply=True, reply_deadline=None)` | Direct message. Counts against the per-agent 100/hr cap. |
+| `bus.broadcast(*, sender_id, broadcast_capability, content, ...)` | Capability-filtered announcement. Counts against the 10/hr broadcast sub-cap **and** the 100/hr per-agent total. |
+| `bus.reply(*, sender_id, in_reply_to, content, ...)` | Reply inheriting the parent's `thread_id`. Refuses replies to broadcasts and to closed threads. |
+| `bus.list_inbox(*, recipient_id, recipient_capabilities, unread_only=True, include_broadcasts=True, limit=100)` | Newest-first inbox. Past-deadline pending messages lazy-expire on read. |
+| `bus.list_thread(thread_id, *, limit=200)` | Full conversation oldest-first. |
+| `bus.mark_read(*, message_id, reader_agent_id)` | Direct → READ transition; broadcasts record a per-reader ack row. |
+| `bus.close_thread(*, thread_id, reason=ThreadCloseReason.MANUAL, metadata=None)` | Idempotent close; subsequent replies raise. |
+| `bus.evaluate_thread_exit(thread_id, *, policy, embedder=None, llm_judge=None, auto_close=True)` | Run a `ThreadExitPolicy` against the thread; auto-close on a tripping gate. |
+
+### `MessagesInterface` (`agent.messages`)
+
+Per-agent bridge into the workspace message bus. Auto-fills
+`sender_id` from `self._agent.agent_id` (impersonation guard). Reads
+`recipient_capabilities` for `check_inbox` from the workspace
+directory rather than from the caller (stale-local-view guard). All
+methods raise `RuntimeError` if the agent is not workspace-registered.
+
+| Method | Returns | Description |
+|---|---|---|
+| `agent.messages.send(*, recipient_id, content, purpose=MessagePurpose.QUESTION, ...)` | `str` (message_id) | Direct send. Auto-fills `sender_id`. |
+| `agent.messages.broadcast(*, broadcast_capability, content, purpose=MessagePurpose.INFORMATION, ...)` | `str` | Capability-filtered. |
+| `agent.messages.reply(*, in_reply_to, content, ...)` | `str` | Reply in an existing thread. |
+| `agent.messages.check_inbox(*, unread_only=True, include_broadcasts=True, limit=100)` | `list[AgentMessage]` | Newest-first; capability filter read from directory. |
+| `agent.messages.list_thread(thread_id, *, limit=200)` | `list[AgentMessage]` | Oldest-first conversation walk. |
+| `agent.messages.list_agents(*, capability=None, include_archived=False)` | `list[AgentRecord]` | Discover valid recipient ids. |
+| `agent.messages.mark_read(message_id)` | `bool` | Acknowledge a fetched message. |
+| `agent.messages.close_thread(thread_id, *, reason=ThreadCloseReason.MANUAL, metadata=None)` | `ThreadClosedResult` | Operator-driven close. |
+
+### `ThreadExitPolicy`
+
+Configurable triple-gate exit policy for an agent message thread.
+Frozen dataclass; stateless across threads.
+
+```python
+from wisdom_layer.workspace import ThreadExitPolicy
+
+policy = ThreadExitPolicy(
+    max_turns=10,            # always-on deterministic ceiling
+    stagnation_check=True,   # cosine similarity over the last two messages
+    convergence_check=True,  # LLM judge classifies CONVERGED / OPEN
+)
+
+result = await workspace.messages.evaluate_thread_exit(
+    thread_id=thread_id,
+    policy=policy,
+    embedder=embed,        # async (text) -> list[float]; opt-in
+    llm_judge=judge,       # async (sys, user) -> verdict_text; opt-in
+    auto_close=True,
+)
+if result is not None:
+    print(result.reason, result.turn_count, result.similarity)
+```
+
+| Field | Default | Behavior |
+|---|---|---|
+| `max_turns: int` | `10` | Hard ceiling. Always evaluated first; provides the guaranteed-termination property. |
+| `stagnation_check: bool` | `True` | Requires an embedder; silently skipped when none is supplied. Threshold ships compiled. |
+| `convergence_check: bool` | `True` | Requires an LLM judge; silently skipped when none is supplied. Judge prompt ships compiled. |
+
+Gates fire in priority order — `max_turns` → `stagnation` →
+`convergence`. The policy is application-driven: it does not auto-fire
+on every message. Application code calls
+`workspace.messages.evaluate_thread_exit()` (or invokes the policy
+directly) at whatever cadence makes sense.
+
+### `WORKSPACE_TOOLS` and `execute_tool`
+
+Five Anthropic-format JSON tool schemas plus a dispatcher that maps a
+tool-use response onto the matching `agent.messages.*` method.
+Schemas port cleanly to OpenAI `functions` (rename `input_schema` →
+`parameters`) and to LiteLLM.
+
+```python
+from wisdom_layer.workspace import WORKSPACE_TOOLS, execute_tool
+
+# Stamp WORKSPACE_TOOLS into the LLM's tool list when the agent is
+# workspace-registered. Then route tool-use blocks back to the SDK:
+result = await execute_tool(
+    agent=agent,
+    name=tool_use.name,
+    arguments=tool_use.input,
+)
+```
+
+| Tool name | Maps to | Notes |
+|---|---|---|
+| `send_message_to_agent` | `agent.messages.send` | |
+| `list_agents` | `agent.messages.list_agents` | |
+| `check_inbox` | `agent.messages.check_inbox` | |
+| `reply_to_message` | `agent.messages.reply` | |
+| `broadcast` | `agent.messages.broadcast` | |
+
+Unknown tool names return `{"error": "unknown_tool", "name": ...}`
+rather than raising — the LLM sees the error and self-corrects on the
+next turn. Hard errors (rate limit, missing workspace, closed thread)
+propagate so callers can decide whether to surface them as tool
+errors. `reply_deadline_hours` is coerced to an absolute UTC datetime
+anchored at the agent's clock.
+
+### Multi-agent types
+
+| Type | Description |
+|---|---|
+| `AgentRecord` | One row in the agent directory (frozen dataclass). |
+| `AgentMessage` | One message in the bus (frozen dataclass). |
+| `MessagePurpose` | Closed-set classifier: `QUESTION`, `INFORMATION`, `COORDINATION`, `HANDOFF`. |
+| `MessageStatus` | Lifecycle: `PENDING`, `READ`, `REPLIED`, `EXPIRED`. |
+| `ThreadCloseReason` | `MANUAL`, `MAX_TURNS`, `STAGNATION`, `CONVERGENCE`. |
+| `ThreadClosedResult` | Frozen result returned by `close_thread` / `evaluate_thread_exit`. Carries `reason`, `closed_at`, `turn_count`, `similarity`, `judge_verdict`. |
+| `Visibility` | `PRIVATE`, `TEAM`, `PUBLIC`. |
+| `SharedMemory` | One row in the pool (frozen dataclass). |
+| `SharedMemoryEndorsement` / `SharedMemoryContention` | Audit rows. |
+| `TeamInsight` | Synthesized cross-agent insight (frozen dataclass). |
+| `TeamInsightProvenance` | Result of `walk_provenance` / `walk_xagent`. Carries `insight` and ordered `contributions`. |
+| `ProvenanceContribution` | One contributing row inside a provenance walk. Carries `shared_memory_id`, `contributor_id`, `source_memory_id` back-pointer, `content`, `team_score`. **No field for cross-agent private content.** |
+| `CrossAgentProvenanceEvent` | Append-only event row in the cross-agent provenance log. |
+| `XAgentEventType` | Closed-set event type enum (`MEMORY_SHARED`, `MEMORY_ENDORSED`, `MEMORY_CONTESTED`, `TEAM_INSIGHT_SYNTHESIZED`, `MESSAGE_SENT`, `MESSAGE_REPLIED`, `MESSAGE_BROADCAST`, `THREAD_CLOSED`). |
+| `MessageRateLimitExceededError` | Raised by `agent.messages.send / broadcast / reply` when caps trip. Carries `cap_kind`, `current`, `limit`, `reset_at`. |
+
+### Backend adapters
+
+| Class | Description |
+|---|---|
+| `BaseWorkspaceBackend` | Abstract base — implement to back a workspace with a custom store. |
+| `WorkspaceSQLiteBackend(path)` | SQLite implementation; ships with v1.2.0. |
+| `PostgresWorkspaceBackend(*, dsn, …)` | Postgres / pgvector implementation. |
 
 ---
 

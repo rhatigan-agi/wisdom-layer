@@ -4,7 +4,7 @@
 
 [project]
 name = "wisdom-layer"
-version = "1.1.0"
+version = "1.2.0"
 description = "Cognitive architecture for AI agents that learn, reflect, and develop wisdom over time."
 readme = "README.md"
 license = "LicenseRef-WisdomLayer-Commercial"

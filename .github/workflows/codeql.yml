@@ -1,0 +1,51 @@
+# CodeQL — static analysis of the public examples.
+#
+# Runs against Python source under examples/. Results land in the GitHub
+# code-scanning tab (Security → Code scanning) and feed the OpenSSF
+# Scorecard SAST check, which is a procurement-grade signal that we look
+# for vulnerable patterns on every change.
+
+name: codeql
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+  schedule:
+    - cron: "30 6 * * 1"  # 06:30 UTC every Monday
+
+permissions: read-all
+
+concurrency:
+  group: codeql-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  analyze:
+    name: Analyze (${{ matrix.language }})
+    runs-on: ubuntu-latest
+    permissions:
+      security-events: write
+      packages: read
+      actions: read
+      contents: read
+
+    strategy:
+      fail-fast: false
+      matrix:
+        language: ["python"]
+
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683  # v4.2.2
+
+      - name: Initialize CodeQL
+        uses: github/codeql-action/init@6825d5659bf007b85a0866e2d0f434aacf50de94  # v3.27.5
+        with:
+          languages: ${{ matrix.language }}
+          queries: security-and-quality
+
+      - name: Perform CodeQL analysis
+        uses: github/codeql-action/analyze@6825d5659bf007b85a0866e2d0f434aacf50de94  # v3.27.5
+        with:
+          category: "/language:${{ matrix.language }}"

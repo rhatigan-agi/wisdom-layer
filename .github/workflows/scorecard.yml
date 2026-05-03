@@ -1,0 +1,62 @@
+# OpenSSF Scorecard — automated security best-practices scoring.
+#
+# Runs weekly + on pushes to main. Publishes results to the GitHub
+# code-scanning tab (Security → Code scanning) and to the public
+# OpenSSF Scorecard registry, which means:
+#
+#   1. The badge URL `https://api.securityscorecards.dev/projects/github.com/<owner>/<repo>/badge`
+#      becomes live and renders the score.
+#   2. Procurement teams (and curious users) can verify our score at
+#      https://securityscorecards.dev/viewer/?uri=github.com/<owner>/<repo>
+#      without us having to publish anything.
+#
+# This workflow needs a PAT-style secret only if we want branch-protection
+# checks; for the score itself the default token is sufficient with the
+# `id-token: write` permission below (used by the registry to verify the
+# run actually came from this repo).
+
+name: scorecard
+
+on:
+  branch_protection_rule:
+  schedule:
+    - cron: "0 6 * * 1"  # 06:00 UTC every Monday
+  push:
+    branches: [main]
+
+permissions: read-all
+
+jobs:
+  analysis:
+    name: Scorecard analysis
+    runs-on: ubuntu-latest
+    permissions:
+      security-events: write
+      id-token: write
+      contents: read
+      actions: read
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683  # v4.2.2
+        with:
+          persist-credentials: false
+
+      - name: Run analysis
+        uses: ossf/scorecard-action@ff5dd8929f96a8a4dc67d13f32b8c75057829621  # v2.4.0
+        with:
+          results_file: results.sarif
+          results_format: sarif
+          publish_results: true
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@b4b15b8c7c6ac21ea08fcf65892d2ee8f75cf882  # v4.4.3
+        with:
+          name: SARIF file
+          path: results.sarif
+          retention-days: 5
+
+      - name: Upload to code-scanning
+        uses: github/codeql-action/upload-sarif@6825d5659bf007b85a0866e2d0f434aacf50de94  # v3.27.5
+        with:
+          sarif_file: results.sarif

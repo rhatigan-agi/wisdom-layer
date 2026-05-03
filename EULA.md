@@ -163,7 +163,7 @@ Delaware, USA. Disputes resolve in state or federal courts there.
 
 ## 9. Questions
 
-- Licensing terms: jeff@rhatigan.ai
+- Licensing terms: compliance@wisdomlayer.ai
 - Security issues: see `SECURITY.md`
 - Product documentation: [wisdomlayer.ai/docs](https://wisdomlayer.ai/docs)
 

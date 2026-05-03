@@ -18,9 +18,9 @@ For the deferred-features roadmap, see the public CHANGELOG.
 
 Pro, Team, and Business share an identical SDK feature set — they
 differ only in seat count and shared billing scope. Enterprise adds
-the multi-agent workspace (coming soon · v1.2.0), deployment use-rights
-(customer-facing, multi-tenant, embedded, OEM, white-label, regulated),
-and contractual IP / audit / SLA terms.
+the multi-agent workspace, deployment use-rights (customer-facing,
+multi-tenant, embedded, OEM, white-label, regulated), and contractual
+IP / audit / SLA terms.
 
 | Capability | **Free** | **Pro** | **Team** | **Business** | **Enterprise** |
 |---|---|---|---|---|---|
@@ -43,9 +43,10 @@ and contractual IP / audit / SLA terms.
 | Cost visibility (summary + per-cycle estimate) | — | Yes | Yes | Yes | Yes |
 | Cost CSV export | — | — | — | — | Yes |
 | Multi-LLM router (route across adapters by tier) | — | Yes | Yes | Yes | Yes |
-| Multi-agent mesh (shared pool, A2A comms) | — | — | — | — | Coming soon · v1.2.0 |
-| Cross-agent memory | — | — | — | — | Coming soon · v1.2.0 |
-| Cross-agent dream cycles | — | — | — | — | Roadmap · v1.3.0 |
+| Multi-agent workspace (shared pool, A2A messaging, cross-agent provenance) | — | — | — | — | Yes |
+| Cross-agent memory (shared pool with back-referenced provenance) | — | — | — | — | Yes |
+| Team Dream Phase 1 (cross-agent reconsolidation) | — | — | — | — | Yes |
+| Cross-agent dream cycles (Phases 2–5) | — | — | — | — | Roadmap · v1.3.0 |
 | Storage backends | SQLite | SQLite + Postgres | SQLite + Postgres | SQLite + Postgres | Any (custom adapters) |
 | **Developer seats** | **1** | **1** | **Up to 10** | **Up to 50** | **Unlimited** |
 | **Agent count** | **3 (hard cap)** | **Unlimited** | **Unlimited** | **Unlimited** | **Unlimited** |
@@ -255,11 +256,28 @@ require contractual IP, audit, or SLA terms.
 
 **Everything in Pro, Team, and Business, plus:**
 
-**Multi-agent coordination (Coming soon · v1.2.0):**
+**Multi-agent coordination:**
 
-- Multi-agent workspace (shared memory pool, agent directory)
-- Cross-agent memory with scoped access (private/shared/global)
-- Inter-agent perspective layer (per-agent framing of shared events)
+- Multi-agent workspace (`Workspace`, agent directory, capability tags,
+  configurable `max_agents` cap)
+- Shared memory pool (`SharedMemoryPool` — promote, endorse, contest,
+  search, synthesize team insight)
+- Cross-agent provenance walk (`agent.provenance.walk_xagent` — walks
+  team insights back to contributing private memories without ever
+  dereferencing them)
+- Agent-to-agent messaging (`agent.messages.*` — send, broadcast,
+  reply, check_inbox, list_thread, list_agents, mark_read,
+  close_thread; rate-limited 100/hr per agent, 10 broadcasts/hr;
+  thread-aware with idempotent close)
+- LLM tool surface for messaging (`WORKSPACE_TOOLS` — 5
+  Anthropic-format JSON tool schemas + `execute_tool` dispatcher)
+- ThreadExitPolicy triple-gate (max_turns / cosine stagnation / LLM
+  convergence judge — deterministic gates always available; LLM gate
+  silent-skipped when no judge supplied)
+- Team Dream Phase 1 — cross-agent reconsolidation that synthesizes
+  team insights from shared memories
+- Team Dream Phases 2–5 — endorsement weighting, decay, contention
+  resolution, anti-loop · Roadmap · v1.3.0
 - Cross-agent critic (catch contradictions across the agent graph · Roadmap · v1.3.0)
 - Voting and proposal subsystem with domain-authority weighting (Roadmap · v1.3.0)
 
@@ -308,12 +326,12 @@ questions, quarterly architecture review.
 
 Free supports up to **3 independent agents**. Multi-agent coordination
 requires **Enterprise** — the multi-agent workspace (shared memory pool,
-agent directory) arrives in v1.2.0; cross-agent critic and dream cycles
+agent directory) is available now; cross-agent critic and dream cycles
 follow in v1.3.0. On Free, three agents means three isolated cognitive
 contexts that do not communicate.
 
-When multi-agent ships, Free users calling a workspace primitive will
-receive `TierRestrictionError(feature='multi_agent_mesh')` with a deep
+Free users calling a workspace primitive receive
+`TierRestrictionError(feature='multi_agent_mesh')` with a deep
 link to Enterprise contact-sales.
 
 ---
@@ -388,9 +406,11 @@ they differ only in licensed seat count and shared billing scope.
 - `cost_export`
 - `multi_agent_mesh`
 - `cross_agent_memory`
-- `cross_agent_dreams`
-- `cross_agent_critic`
-- `custom_dream_phases`
+- `multi_agent_workspace` — gates workspace construction
+- `shared_memory_pool` — gates promote / endorse / contest / search APIs
+- `agent_messaging` — gates send / inbox / outbox
+- `custom_dream_phases` — forward-declared; gate returns True today,
+  no plugin-step surface wired until v1.3.0
 - `multi_tier_routing` — internal forward gate, not user-facing in v1.x
 - `license_audit_log` — license-event audit trail (forward-declared;
   no-op surface until first compliance customer requests it)

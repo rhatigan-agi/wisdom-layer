@@ -1,32 +1,23 @@
-# Wisdom Layer SDK
+<div align="center">
 
-<!-- Release & install -->
-[![PyPI version](https://img.shields.io/pypi/v/wisdom-layer?color=8b5cf6&label=pypi)](https://pypi.org/project/wisdom-layer/)
-[![Python versions](https://img.shields.io/pypi/pyversions/wisdom-layer?color=3776ab&logo=python&logoColor=white)](https://pypi.org/project/wisdom-layer/)
-[![Wheel](https://img.shields.io/pypi/wheel/wisdom-layer?color=8b5cf6)](https://pypi.org/project/wisdom-layer/#files)
-[![Implementation](https://img.shields.io/pypi/implementation/wisdom-layer?color=3776ab)](https://pypi.org/project/wisdom-layer/)
-[![License](https://img.shields.io/badge/license-Proprietary-737373)](LICENSE)
+<img src="docs/assets/wisdom_wordmark.png" width="420" alt="Wisdom Layer SDK" />
 
-<!-- Quality & security -->
-[![CI](https://img.shields.io/github/actions/workflow/status/rhatigan-agi/wisdom-layer/test.yml?branch=main&label=ci&logo=github)](https://github.com/rhatigan-agi/wisdom-layer/actions/workflows/test.yml)
-[![Tests](https://img.shields.io/badge/tests-2%2C173%20passing-2ea043?logo=pytest&logoColor=white)](https://github.com/rhatigan-agi/wisdom-layer/actions/workflows/test.yml)
-[![Coverage](https://img.shields.io/badge/coverage-91%25-2ea043)](https://github.com/rhatigan-agi/wisdom-layer/actions/workflows/test.yml)
-[![Mypy strict](https://img.shields.io/badge/mypy-strict-1f6feb?logo=python&logoColor=white)](https://mypy-lang.org/)
-[![Ruff](https://img.shields.io/endpoint?url=https://raw.githubusercontent.com/astral-sh/ruff/main/assets/badge/v2.json)](https://github.com/astral-sh/ruff)
-[![OpenSSF Scorecard](https://api.securityscorecards.dev/projects/github.com/rhatigan-agi/wisdom-layer/badge)](https://securityscorecards.dev/viewer/?uri=github.com/rhatigan-agi/wisdom-layer)
-[![Pre-commit](https://img.shields.io/badge/pre--commit-enabled-fab040?logo=pre-commit&logoColor=white)](https://github.com/pre-commit/pre-commit)
-
-<!-- Adoption & activity -->
-[![Downloads / month](https://static.pepy.tech/badge/wisdom-layer/month)](https://pepy.tech/project/wisdom-layer)
-[![Downloads / total](https://static.pepy.tech/badge/wisdom-layer)](https://pepy.tech/project/wisdom-layer)
-[![GitHub stars](https://img.shields.io/github/stars/rhatigan-agi/wisdom-layer?color=8b5cf6&logo=github&logoColor=white)](https://github.com/rhatigan-agi/wisdom-layer/stargazers)
-[![Last commit](https://img.shields.io/github/last-commit/rhatigan-agi/wisdom-layer?color=2ea043)](https://github.com/rhatigan-agi/wisdom-layer/commits/main)
-[![Contributors](https://img.shields.io/github/contributors/rhatigan-agi/wisdom-layer?color=8b5cf6)](https://github.com/rhatigan-agi/wisdom-layer/graphs/contributors)
-
-Cognitive architecture for AI agents that learn, reflect, and develop wisdom
-over time.
+### Cognitive architecture for AI agents that learn, reflect, and develop wisdom over time.
 
 **Everyone's building agent memory. We're building agent wisdom.**
+
+<br />
+
+<!-- Release & install -->
+[![PyPI version](https://img.shields.io/pypi/v/wisdom-layer?color=8b5cf6&label=pypi)](https://pypi.org/project/wisdom-layer/) [![Python versions](https://img.shields.io/pypi/pyversions/wisdom-layer?color=3776ab&logo=python&logoColor=white)](https://pypi.org/project/wisdom-layer/) [![Wheel](https://img.shields.io/pypi/wheel/wisdom-layer?color=8b5cf6)](https://pypi.org/project/wisdom-layer/#files) [![Implementation](https://img.shields.io/pypi/implementation/wisdom-layer?color=3776ab)](https://pypi.org/project/wisdom-layer/) [![License](https://img.shields.io/badge/license-Proprietary-737373)](LICENSE)
+
+<!-- Quality & security -->
+[![CI](https://img.shields.io/github/actions/workflow/status/rhatigan-agi/wisdom-layer/test.yml?branch=main&label=ci&logo=github)](https://github.com/rhatigan-agi/wisdom-layer/actions/workflows/test.yml) [![Tests](https://img.shields.io/badge/tests-2%2C173%20passing-2ea043?logo=pytest&logoColor=white)](https://github.com/rhatigan-agi/wisdom-layer/actions/workflows/test.yml) [![Coverage](https://img.shields.io/badge/coverage-91%25-2ea043)](https://github.com/rhatigan-agi/wisdom-layer/actions/workflows/test.yml) [![Mypy strict](https://img.shields.io/badge/mypy-strict-1f6feb?logo=python&logoColor=white)](https://mypy-lang.org/) [![Ruff](https://img.shields.io/endpoint?url=https://raw.githubusercontent.com/astral-sh/ruff/main/assets/badge/v2.json)](https://github.com/astral-sh/ruff) [![OpenSSF Scorecard](https://api.securityscorecards.dev/projects/github.com/rhatigan-agi/wisdom-layer/badge)](https://securityscorecards.dev/viewer/?uri=github.com/rhatigan-agi/wisdom-layer) [![Pre-commit](https://img.shields.io/badge/pre--commit-enabled-fab040?logo=pre-commit&logoColor=white)](https://github.com/pre-commit/pre-commit)
+
+<!-- Activity -->
+[![Downloads / month](https://static.pepy.tech/badge/wisdom-layer/month)](https://pepy.tech/project/wisdom-layer) [![Downloads / total](https://static.pepy.tech/badge/wisdom-layer)](https://pepy.tech/project/wisdom-layer) [![Last commit](https://img.shields.io/github/last-commit/rhatigan-agi/wisdom-layer?color=2ea043)](https://github.com/rhatigan-agi/wisdom-layer/commits/main)
+
+</div>
 
 ```
 Your Agent Code

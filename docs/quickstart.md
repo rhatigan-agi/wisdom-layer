@@ -406,41 +406,50 @@ async def main() -> None:
     await workspace.register_agent(writer,  capabilities=["writer"])
 
     # 2. The planner discovers something useful and shares it.
-    captured = await planner.memory.capture(
+    #    `capture()` returns the memory id directly as a str.
+    memory_id = await planner.memory.capture(
         "lesson",
         {"text": "Three small specs land in production faster than one big one."},
     )
     shared_id = await planner.memory.share(
-        captured.memory_id,
+        memory_id,
         visibility=Visibility.TEAM,
         reason="Pattern worth other agents seeing",
     )
 
     # 3. The critic endorses; the workspace pool ranks it.
+    #    `pool.endorse(shared_memory_id, *, endorsing_agent_id)` —
+    #    `shared_memory_id` is positional. No `reason` arg on endorse.
     await workspace.pool.endorse(
-        shared_memory_id=shared_id,
-        agent_id="critic",
-        reason="Confirmed against past launch retros",
+        shared_id,
+        endorsing_agent_id="critic",
     )
 
     # 4. A Team Dream cycle synthesizes a team insight.
-    insight = await workspace.pool.synthesize_team_insight(
-        content="Small, well-scoped specs ship faster than monoliths.",
-        contributing_shared_memory_ids=[shared_id],
-        salience=0.7,
+    #    Prefer the higher-level `workspace.team_synthesize(...)` over
+    #    the lower-level `pool.synthesize_team_insight(...)` — the
+    #    wrapper runs the synthesizer's LLM, builds the contributor
+    #    tuple list, computes the prompt hash, and persists in one call.
+    insight = await workspace.team_synthesize(
+        synthesizer=writer,
+        min_contributors=1,
+        visibility_in=[Visibility.TEAM, Visibility.PUBLIC],
+        pool_limit=50,
     )
 
     # 5. The writer walks the provenance back across the agent boundary.
-    walk = await writer.provenance.walk_xagent(insight.id)
-    for c in walk.contributions:
-        print(
-            c.contributor_id,        # "planner"
-            c.shared_memory_id,      # the pool id
-            c.source_memory_id,      # back-pointer into planner.db
-            c.team_score,
-        )
-        # `c.source_memory_id` is opaque here — only the planner can
-        # dereference it via planner.memory.get(c.source_memory_id).
+    if insight is not None:
+        walk = await writer.provenance.walk_xagent(insight.id)
+        print(walk.team_insight.content)
+        for c in walk.contributions:
+            print(
+                c.contributor_agent_id,   # "planner"
+                c.shared_memory_id,       # the pool id
+                c.source_memory_id,       # back-pointer into planner.db
+                c.contribution_weight,
+            )
+            # `c.source_memory_id` is opaque here — only the planner can
+            # dereference it via planner.memory.get(c.source_memory_id).
 
     for a in (planner, critic, writer):
         await a.close()

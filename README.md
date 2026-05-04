@@ -83,6 +83,15 @@ without ever copying a private memory across the workspace boundary.
   column (migration `0024_facts_source_ids`) lands the storage half;
   the public API for it ships in v1.2.1.
 
+On the v1.2.0 multi-agent eval suite, joining a workspace lifts
+cross-domain knowledge from **0.45 → 0.80** (+35 pts on a 0–100 GEval
+rubric, N=3, ±3.2) — zero training, zero re-prompting. Synthesis on
+top of the shared pool adds another **+16 pts** to specificity-without-
+fabrication. Methodology, judge config, and the four-arm comparison
+table (including the steel-man generalist that still beats us by ~10
+pts cross-domain) are documented at
+[wisdomlayer.ai/benchmarks](https://wisdomlayer.ai/benchmarks#v120).
+
 Multi-agent features require an Enterprise license. Free / Pro / Team
 / Business retain the v1.1 single-agent feature set. New CLI:
 `wisdom-layer-migrate up` runs per-agent and workspace migrations

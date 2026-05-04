@@ -19,6 +19,19 @@ Pro users can still inspect what their agent already knows.
 
 Methods without an explicit annotation are Free.
 
+> **SDK feature tiers vs. billing tiers.** The runtime `Tier` enum has
+> three values — `FREE`, `PRO`, `ENTERPRISE` — because there are only
+> three distinct *SDK feature gates*. Subscription pricing (Free, Pro,
+> Team, Business, Enterprise) is a billing distinction handled by
+> Stripe and the EULA: **Pro, Team, and Business all mint
+> `tier="pro"` license tokens and unlock the identical SDK feature
+> set.** They differ only in licensed seat count (1 / 10 / 50) and
+> shared billing scope, not in what the SDK lets you do at runtime.
+> Branch on `agent.tier == Tier.PRO` and your code works the same for
+> a Pro, Team, or Business customer; only Enterprise (`Tier.ENTERPRISE`)
+> unlocks additional SDK surface (multi-agent workspace, cross-agent
+> provenance, custom dream phases, deployment use-rights).
+
 ---
 
 ## Core
@@ -359,9 +372,9 @@ directives, never creates proposals.
 
 ### `agent.critic.verify_grounding(output)` — **(Pro+, Beta, opt-in)**
 
-> **Beta surface.** Public signature subject to refinement in v1.0.x
-> based on real-world usage. Reaches stable status in v1.1, after
-> which standard stability guarantees apply.
+> **Beta surface.** Public signature is still subject to refinement
+> based on real-world usage. Stable status target: v1.3, after which
+> standard stability guarantees apply.
 
 Extract atomic claims from a draft response and verify each against the
 agent's stored facts. Gated on the `grounding_verifier` feature.
@@ -385,17 +398,21 @@ and forces `pass_through=False`.
 
 ## Facts — **(Pro+, Beta, opt-in)**
 
-> **Beta surface.** Public signatures of `agent.facts.*` are subject to
-> refinement in v1.0.x based on real-world usage. Reaches stable status
-> in v1.1, after which standard stability guarantees apply.
+> **Beta surface.** Public signatures of `agent.facts.*` are still
+> subject to refinement based on real-world usage. Stable status
+> target: v1.3, after which standard stability guarantees apply.
+> v1.2.0 ships the schema-half of per-fact provenance
+> (`facts.source_memory_ids` column, migration `0024_facts_source_ids`);
+> the public surface for that column (`Fact.source_memory_ids` and
+> `agent.facts.trace()`) lands in v1.2.1.
 
 Atomic fact extraction at memory-write and structured lookup at
 response-time. Activated by `AdminDefaults.enable_fact_extraction=True`;
 defaults off so existing integrations see no behaviour change. Facts
 are stored as `(subject, attribute, value)` triples with provenance
-back to the source memory. v1.0 uses last-write-wins on
+back to the source memory. Current behavior is last-write-wins on
 `(agent_id, subject, attribute)`; reconciliation, decay, and history
-queries are deferred to v1.0.1.
+queries land alongside the v1.2.1 public-surface upgrade.
 
 ### `agent.facts.extract(memory_id)`
 
@@ -519,6 +536,39 @@ Pre-flight cost estimate for the next dream cycle. Keyword-only.
 Retrieve a single dream report by 12-char hex `cycle_id`.
 
 **Returns:** `dict[str, object] | None`
+
+### `agent.dreams.run_team_dream(*, threshold=0.6, limit=20)` — **(Enterprise)**
+
+Cross-agent reconsolidation pass. Walks the workspace's
+`SharedMemoryPool`, selects shared memories whose `team_score` exceeds
+`threshold`, and synthesizes a `TeamInsight` per cluster — a distilled
+cross-agent observation back-referenced to the contributing
+`SharedMemory` rows (and through them to each contributor's
+`source_memory_id` in their private backend).
+
+The agent must be registered to a workspace; otherwise raises
+`RuntimeError`. Synthesized insights are persisted to the workspace
+pool and surface via `pool.list_team_insights()` and
+`agent.provenance.walk_xagent(team_insight_id)`. Phase 1 ships the
+synthesizer and scoring pipeline in v1.2.0; cross-agent endorsement
+weighting, decay, contention resolution, and anti-loop guards (Phases
+2–5) land in v1.3.0.
+
+**Args (keyword-only):**
+
+- `threshold: float` — Minimum `team_score` for a shared memory to
+  participate in synthesis. Default `0.6`.
+- `limit: int` — Cap on shared memories considered in a single run.
+  Default `20`.
+
+**Returns:** `list[TeamInsight]` — newly synthesized insights, ordered
+by synthesis sequence. An empty list means no shared memories cleared
+the threshold this cycle.
+
+**Raises:**
+
+- `RuntimeError` — Agent is not registered to a workspace.
+- `TierRestrictionError` — License tier is not Enterprise.
 
 ---
 

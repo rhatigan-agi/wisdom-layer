@@ -20,11 +20,13 @@
 </div>
 
 ```
-Your Agent Code
+Your Agent Code (one or more agents)
      ↓
 Wisdom Layer SDK        ← You are here
+  ├─ Per-agent state (memories, facts, directives — private)
+  └─ Workspace (shared pool, messaging, team dreams) — Enterprise
      ↓
-Any LLM (Anthropic, OpenAI, or any async callable)
+Any LLM (Anthropic, OpenAI, Gemini, Ollama, LiteLLM, or any async callable)
      ↓
 Any Storage Backend (SQLite, Postgres, bring-your-own)
 ```
@@ -37,10 +39,62 @@ we can answer real questions about adoption — full disclosure and an
 opt-out flag at [docs/telemetry.md](docs/telemetry.md). Pro and
 Enterprise are silent by default.
 
-> **See it running:** [Wisdom Studio](https://github.com/rhatigan-agi/wisdom-studio)
-> is the canonical reference UI for this SDK — a forkable FastAPI + React
-> app that spins up an agent in 60 seconds and visualizes its cognition
-> in real time. Apache-2.0. One docker command:
+---
+
+## What's new in v1.2.0 — agents that learn from each other
+
+**Released 2026-05-03.** The single-agent closed loop (capture →
+reflect → directives → critic → journals → dreams) shipped in v1.0
+and stays unchanged. v1.2.0 adds the *cross-agent* primitives that
+make a fleet of agents add up to more than the sum of its parts —
+without ever copying a private memory across the workspace boundary.
+
+- **Multi-agent workspace.** A shared backend (`Workspace` +
+  `WorkspaceSQLiteBackend` / `PostgresWorkspaceBackend`) holds the
+  agent directory, shared memory pool, team insights, and message
+  bus. Per-agent state stays in each agent's own private backend —
+  the workspace stores back-references, never copies.
+- **Shared memory pool with endorse / contest.** `agent.memory.share()`
+  promotes one of *this agent's* memories into the pool with a
+  back-reference (`source_memory_id`) only the contributing agent can
+  dereference. Other agents endorse, contest, and search the pool;
+  ranking surfaces the most-endorsed observations first.
+- **Agent-to-agent messaging.** Eight-method `agent.messages.*`
+  surface — `send`, `broadcast`, `reply`, `check_inbox`, `list_thread`,
+  `list_agents`, `mark_read`, `close_thread` — routed through a
+  workspace-wide bus with per-agent rate limits, full provenance, and
+  impersonation guards.
+- **Team Dream Phase 1.** `dreams.run_team_dream()` synthesizes
+  cross-agent `TeamInsight` rows from shared memories that clear a
+  configurable score threshold.
+- **Cross-agent provenance walks.** `agent.provenance.walk_xagent(team_insight_id)`
+  returns the team insight, its contributing `SharedMemory` rows,
+  and each contribution's back-pointer into the contributor's private
+  backend. The patent-defensible isolation invariant is encoded in
+  the type system: the walk *cannot* dereference cross-agent private
+  content, and the public surface is pinned by a contract test.
+- **`ThreadExitPolicy` triple-gate.** Frozen dataclass with
+  `max_turns` (deterministic ceiling, always-on), `stagnation_check`
+  (cosine similarity, deterministic), and `convergence_check` (LLM
+  judge, opportunistic). Guaranteed termination without giving up
+  the LLM-judged convergence signal when an embedder / judge is
+  available.
+- **Per-fact provenance schema.** New `facts.source_memory_ids`
+  column (migration `0024_facts_source_ids`) lands the storage half;
+  the public API for it ships in v1.2.1.
+
+Multi-agent features require an Enterprise license. Free / Pro / Team
+/ Business retain the v1.1 single-agent feature set. New CLI:
+`wisdom-layer-migrate up` runs per-agent and workspace migrations
+against an existing store.
+
+See the [multi-agent quickstart](docs/multi-agent-quickstart.md) for
+runnable code, and [CHANGELOG.md](CHANGELOG.md) for the full release.
+
+> **See multi-agent in action:** [Wisdom Studio](https://github.com/rhatigan-agi/wisdom-studio)
+> is the open-source reference UI — three pre-seeded specialist agents,
+> live cross-agent provenance walks, run team dream cycles in real time.
+> Apache-2.0. One docker command:
 > `docker run -p 3000:3000 ghcr.io/rhatigan-agi/wisdom-studio:latest`.
 
 ---
@@ -609,10 +663,12 @@ See [wisdomlayer.ai/pricing](https://wisdomlayer.ai/pricing) for current pricing
 - **Public surface** -- everything re-exported from `wisdom_layer/__init__.py`.
   Breaking changes require a major version bump.
 - **Beta surface** -- `agent.facts.*` and `agent.critic.verify_grounding()`
-  are marked Beta in v1.0. Their public signatures are subject to refinement
-  in v1.0.x patch releases based on real-world usage. They reach stable
-  status in v1.1, after which standard stability guarantees apply. Opt-in
-  only via `AdminDefaults(enable_fact_extraction=True, critic_verifies_grounding=True)`.
+  remain marked Beta. Their public signatures are still subject to
+  refinement based on real-world usage; stable status target is v1.3,
+  after which standard stability guarantees apply. v1.2.0 ships the
+  schema-half of per-fact provenance (`facts.source_memory_ids`); the
+  public API for that column lands in v1.2.1. Opt-in only via
+  `AdminDefaults(enable_fact_extraction=True, critic_verifies_grounding=True)`.
 - **Testing surface** -- `wisdom_layer.testing/*`. Stable across minor versions.
 - **Event payloads** -- every payload carries `schema_version`; adding fields
   is non-breaking, removing or renaming requires a version bump.

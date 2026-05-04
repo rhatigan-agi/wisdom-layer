@@ -9,15 +9,22 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [1.2.0] -- 2026-05-03
 
-Multi-agent release — adds the `wisdom_layer.workspace` surface so
-multiple agents can share a backend, contribute to a shared memory
-pool, walk cross-agent provenance back to the contributing private
-memory, message each other directly, and run a Team Dream phase that
-synthesizes team insights from cross-agent contributions. Multi-agent
-features are Enterprise-tier; Free / Pro / Team / Business retain the
-v1.1.0 single-agent feature set. This release also rolls in the
-commercial restructure (Business tier, monthly + annual billing, EULA
-rewrite) and the demo-pool slot reservation that ships alongside it.
+**Headline.** Wisdom Layer agents can now learn from each other.
+v1.2.0 ships the cross-agent primitives — shared memory pool with
+endorse / contest, eight-method agent-to-agent message bus,
+Team Dream Phase 1, and cross-agent provenance walks — without ever
+copying a private memory across the workspace boundary. Each agent's
+private state stays in its own backend; the workspace stores
+back-references that only the contributing agent can dereference, and
+the patent-defensible isolation invariant is enforced in the type
+system and pinned by a contract test. `ThreadExitPolicy` gives every
+agent thread a guaranteed-termination ceiling plus optional
+stagnation / convergence checks, and a new `wisdom-layer-migrate up`
+CLI runs per-agent and workspace migrations against existing stores.
+Multi-agent features are Enterprise-tier; Free / Pro / Team / Business
+retain the v1.1.0 single-agent feature set unchanged. The release also
+rolls in the commercial restructure (Business tier, monthly + annual
+billing, EULA rewrite) and the demo-pool slot reservation.
 
 ### Added — Multi-agent workspace (Enterprise)
 

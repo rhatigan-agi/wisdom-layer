@@ -234,6 +234,17 @@ Idempotent — re-sharing returns the same id.
 - `ValueError` — Memory id does not exist for this agent, or
   `visibility=Visibility.PRIVATE`.
 
+> **Content shape across the share boundary.** `SharedMemory.content`
+> is persisted as `str`. If the originating memory was captured with a
+> `dict` payload (e.g. `agent.memory.capture("conversation", {"user":
+> ..., "assistant": ...})`), the shared row stores the Python `repr` of
+> that dict, not JSON — `ast.literal_eval` is required to reconstruct
+> the structure on the other side. To preserve structured content
+> cleanly across the share boundary in v1.2.0, capture as a JSON-
+> serialised string up front (`json.dumps({...})`) and parse on
+> retrieval. A future release will preserve the original content shape
+> on `SharedMemory.content` directly.
+
 ---
 
 ## Directives
@@ -609,8 +620,11 @@ for cross-agent private content.
 **Args:**
 - `team_insight_id: str` — The id of the team insight to walk.
 
-**Returns:** `TeamInsightProvenance` with `insight`, ordered
-`contributions: list[ProvenanceContribution]`.
+**Returns:** `TeamInsightProvenance` with `team_insight: TeamInsight`
+and `contributions: list[ProvenanceContribution]`. Each
+`ProvenanceContribution` carries `shared_memory_id`,
+`contributor_agent_id`, `source_memory_id`, `shared_content`, and
+`contribution_weight`.
 
 **Raises:**
 - `RuntimeError` — Agent is not registered to a workspace.
@@ -761,13 +775,16 @@ agents' private memories. Returned by `workspace.pool`.
 
 | Method | Description |
 |---|---|
-| `pool.promote(*, contributor_id, source_memory_id, content, visibility, reason, base_score)` | Idempotent promotion; returns deterministic 16-char hex `shared_memory_id`. Most callers reach this through `agent.memory.share()` instead of directly. |
-| `pool.endorse(*, shared_memory_id, agent_id, reason="")` | Atomic endorsement; composite PK + INSERT OR IGNORE makes it idempotent per agent. |
-| `pool.contest(*, shared_memory_id, agent_id, reason="")` | Atomic contention; same idempotency shape as `endorse`. |
-| `pool.list_shared(*, capability=None, contributor_id=None, exclude_contributor_id=None, visibility_in=None, limit=50)` | Filtered listing. `contributor_id` and `exclude_contributor_id` together raise `ValueError`. |
-| `pool.search(query, *, limit=10)` | Substring + ranked-by-team-score search. |
-| `pool.synthesize_team_insight(content, *, contributing_shared_memory_ids, salience=0.5)` | Persist a team insight that aggregates contributing rows. |
+| `pool.promote(*, contributor_id, source_memory_id, content, visibility=Visibility.TEAM, reason="", base_score=0.0)` | Idempotent promotion; returns deterministic 16-char hex shared-memory id. Most callers reach this through `agent.memory.share()` instead of directly. |
+| `pool.endorse(shared_memory_id, *, endorsing_agent_id)` | Atomic endorsement; composite PK + `INSERT OR IGNORE` makes it idempotent per agent. Returns `bool` — `True` if newly recorded, `False` if duplicate. |
+| `pool.contest(shared_memory_id, *, contesting_agent_id, reason)` | Atomic contention; `reason` is required and persisted so reviewers can adjudicate without chasing the contesting agent. Returns `bool` — `True` if newly recorded, `False` if duplicate. |
+| `pool.list(*, contributor_id=None, exclude_contributor_id=None, visibility_in=None, min_base_score=None, include_archived=False, limit=100)` | Filtered listing, newest-first. `contributor_id` and `exclude_contributor_id` are mutually exclusive — passing both raises `ValueError`. |
+| `pool.search(query, *, asking_agent_id=None, exclude_own=False, visibility_in=None, limit=20)` | Substring search ranked by `team_score` descending. **v1.2.0 ships text-substring matching only** — semantic search lands with the shared-pool embedding column in v1.3.0. For natural-language peer recall in v1.2.0, fall back to `pool.list(exclude_contributor_id=<self>, limit=N)` for chronological peer surfacing. To exclude the asking agent's own contributions from results, pass `asking_agent_id=<self>` together with `exclude_own=True` (per-agent exclusion of arbitrary other contributors is not supported on `search`). |
+| `pool.synthesize_team_insight(*, content, contributor_shared_memories, synthesis_prompt_hash, dream_cycle_id=None)` | Persist a Team Dream Phase 1 collective synthesis. `contributor_shared_memories` is a `list[tuple[shared_memory_id, contributor_agent_id, contribution_weight]]` — one tuple per memory the synthesis drew from (`contribution_weight=1.0` is the neutral default). `synthesis_prompt_hash` is required and used to dedupe re-runs against an identical input set. Returns the new `team_insight_id` as `str`. **Most callers should use `workspace.team_synthesize(synthesizer=agent, ...)` instead** — it runs the LLM, builds the contributor tuple list, computes the prompt hash, and persists the row in one call. Reach for this lower-level primitive only for custom synthesis pipelines. |
+| `pool.list_team_insights(*, include_archived=False, limit=100)` | Newest-first list of synthesised team insights. Iterate `.id` to walk provenance via `agent.provenance.walk_xagent()`. |
 | `pool.walk_provenance(team_insight_id)` | Returns `TeamInsightProvenance` with contributions back to each contributor's `source_memory_id`. Most callers reach this through `agent.provenance.walk_xagent()`. |
+
+> **Dataclass field naming.** `SharedMemory` and `TeamInsight` rows expose their identifier as `.id` (not `.shared_memory_id` / `.team_insight_id`). The longer names are used as method *parameters* (e.g. `pool.endorse(shared_memory_id, ...)`, `agent.provenance.walk_xagent(team_insight_id)`); the row attributes themselves are `.id`. Iterating `pool.list()` or `pool.list_team_insights()` and accessing `row.shared_memory_id` / `row.team_insight_id` raises `AttributeError`.
 
 ### `MessageBus`
 

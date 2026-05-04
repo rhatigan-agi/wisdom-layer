@@ -151,6 +151,38 @@ Both methods emit cross-agent provenance events
 provenance walks can reconstruct the social graph behind any team
 insight.
 
+### Reading the pool — list vs search
+
+Two surfaces for reading peer contributions out of the pool:
+
+```python
+# Chronological peer recency (recommended for natural-language flows in v1.2.0)
+peers = await workspace.pool.list(
+    exclude_contributor_id=critic.agent_id,   # everyone except the asking agent
+    limit=20,
+)
+
+# Substring search (literal token match, ranked by team_score)
+hits = await workspace.pool.search(
+    "schedule cadence",                        # tokens must appear literally
+    asking_agent_id=critic.agent_id,
+    exclude_own=True,
+)
+```
+
+> **`pool.search` is substring-only in v1.2.0.** It matches literal
+> tokens against `SharedMemory.content` and ranks by `team_score`
+> descending. A natural-language query that does not share vocabulary
+> with the captured turns (e.g. *"how is the project going?"* against a
+> pool containing *"Pipeline is short $500K for Q2"*) returns zero
+> results — this is the documented behaviour, not a bug. For
+> semantic peer recall in v1.2.0, use `pool.list(exclude_contributor_id
+> =<self>, limit=N)` to surface the most recent peer contributions and
+> let the synthesiser LLM do the matching. Embedding-backed
+> `pool.search` lands in v1.3.0 alongside the shared-pool embedding
+> column. `agent.memory.search()` (per-agent, embedding-backed on
+> Pro+) is unaffected — the asymmetry is intentional for v1.2.0 only.
+
 ## 5. Run a Team Dream cycle
 
 `team_synthesize()` pulls cross-agent memories, runs the synthesizer
@@ -226,10 +258,26 @@ of the provenance walk: the team insight, the contributing
 back-pointer into the contributor's own backend.
 
 ```python
-provenance = await writer.provenance.walk_xagent(insight.team_insight_id)
+provenance = await writer.provenance.walk_xagent(insight.id)
+print(provenance.team_insight.content)
 for contribution in provenance.contributions:
-    print(f"{contribution.contributor_id}: {contribution.source_memory_id}")
+    print(
+        contribution.contributor_agent_id,
+        contribution.shared_memory_id,
+        contribution.source_memory_id,
+    )
 ```
+
+> **Field-name conventions across the workspace surface.** Pool rows
+> (`SharedMemory`, `TeamInsight`) and the wrapper
+> `TeamInsightProvenance` use short attribute names — `.id` and
+> `.team_insight` respectively — while the longer `shared_memory_id`
+> / `team_insight_id` names are reserved for method *parameters*
+> (e.g. `pool.endorse(shared_memory_id, ...)`,
+> `walk_xagent(team_insight_id)`). `ProvenanceContribution` is the one
+> exception: it carries `shared_memory_id`, `contributor_agent_id`,
+> and `source_memory_id` as fields because each row joins three
+> distinct id namespaces and a single `.id` would be ambiguous.
 
 **The walk does not — and cannot — dereference any `source_memory_id`.**
 Only the contributing agent itself, holding a handle to its own

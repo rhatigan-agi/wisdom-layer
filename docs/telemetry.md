@@ -76,8 +76,8 @@ The full payload, exactly as transmitted:
 | `agent_count` | int | Number of active agents at send time. |
 | `memory_count` | int | Total memories across all agents on this install. |
 | `msg_count_30d` | int | Rolling 30-day message count. |
-| `fact_count` | int | Total atomic facts extracted (always `0` on Free, since fact extraction is a Pro feature). |
-| `dream_cycles_count` | int | Total dream cycles run since install. |
+| `fact_count` | int | Total atomic facts extracted. Hardcoded to `0` in v1.2.0 while the backend counter contract was finalized; **populated from real data starting in v1.2.1.** Always `0` on Free in any case, since fact extraction is a Pro feature. |
+| `dream_cycles_count` | int | Total dream cycles run since install. Hardcoded to `0` in v1.2.0; **populated from real data starting in v1.2.1.** |
 | `directive_count` | int | Number of active directives. |
 | `os` | string | `linux` / `darwin` / `win32`. No version detail. |
 | `python_version` | string | Major.minor only (e.g., `3.11`). No patch level. |

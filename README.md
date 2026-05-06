@@ -19,6 +19,10 @@
 
 </div>
 
+> **Install:** `pip install wisdom-layer` · **Docs:** [wisdomlayer.ai](https://wisdomlayer.ai)
+>
+> This repository is the public home for **documentation, examples, and discussion** — the compiled SDK is distributed via PyPI; source lives in a private monorepo. File bugs as [Issues](https://github.com/rhatigan-agi/wisdom-layer/issues), bring questions and design conversations to [Discussions](https://github.com/rhatigan-agi/wisdom-layer/discussions). If something here saves you a debugging session, a star helps the next person find it.
+
 ```
 Your Agent Code (one or more agents)
      ↓

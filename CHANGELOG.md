@@ -7,6 +7,80 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [1.2.1] -- 2026-05-05
+
+**Headline.** Python 3.14 wheels, plus the small follow-ups from
+v1.2.0's launch dust. The bigger cognition-hardening trio originally
+drafted for v1.2.1 (tiered directive enforcement, per-fact provenance
+API surface, fact-aware critic veto) was serialized to v1.2.2 to keep
+this release focused on mechanical and low-risk changes.
+
+### Added
+
+- **Python 3.14 wheel matrix.** `cibuildwheel` builds for
+  `cp311 / cp312 / cp313 / cp314` × four platforms (linux x86_64,
+  linux arm64, macOS arm64, windows x86_64) — **16 compiled wheels per
+  release** (was 12). Free-threaded variants (`cp313t` / `cp314t`,
+  PEP 703 GIL-disabled) remain explicitly skipped until the
+  `_internal/consolidation`, `_internal/evolution`, dream-cycle
+  scheduler, and connection-pool surfaces have been audited under a
+  GIL-disabled runtime. Tracked in `VFUTURE.md`.
+- **`agent.directives.update(directive_id, new_text, *, reason=None,
+  revised_by="manual")`.** Update a directive's text in place,
+  preserving the prior version in a new `directive_revisions` table.
+  Pro-tier; gated on the existing `directive_evolution` feature.
+  `locked` and `advisory` directive-evolution modes raise
+  `DirectiveLockedError` (advisory text-edit review flow lands later).
+- **`agent.directives.history(directive_id)`.** Read-only Free-tier
+  surface; returns the oldest-first revision list, empty when the
+  directive has never been edited via `update()`. Pairs with
+  `update()` for "How my rules have evolved" surfaces.
+- **`directive.text_updated` event.** Fires on every successful
+  `update()` carrying `directive_id`, `prior_text`, `new_text`,
+  `reason`, `revision_number`, `revised_at`, `revised_by`. Lets
+  downstream consumers track directive evolution without polling.
+- **Telemetry counters wired up.** `fact_count` and
+  `dream_cycles_count` in the daily telemetry snapshot are now real
+  values read from `BaseBackend.get_agent_counts` instead of being
+  hardcoded to zero with a TODO. The `facts` table is added to the
+  counts dict on both backends; `dream_reports` is read into
+  `dream_cycles_count`. No `payload_version` bump — fields already
+  existed on the wire and on the server-side ingest schema.
+
+### Changed
+
+- **License log message wording.** `wisdom_layer.license` no longer
+  emits `"License validated via API (legacy key)"` for current-format
+  `wl_ent_*` / `wl_pro_*` / `wl_free_*` keys — the suffix was
+  misleading, customers reading their own logs thought they needed to
+  rotate, and procurement scans flagged it as inconsistent. Renamed
+  to `"License validated via API"`. Offline-grace warning similarly
+  loses its `"(legacy key)"` suffix. No behavior change.
+
+### Migrations
+
+- `0025_directive_revisions.sql` (SQLite + Postgres). Creates the
+  `directive_revisions` table with `(directive_id, revision_number)`
+  uniqueness + indexes by `directive_id` and `agent_id`. Idempotent
+  via `CREATE TABLE IF NOT EXISTS`; runs via the existing
+  `wisdom-layer-migrate up` CLI.
+
+### Notes
+
+- v1.2.1 is fully backward compatible with v1.2.0. Existing user code
+  runs unchanged on the v1.2.1 wheel.
+- Telemetry doc (`docs/telemetry.md`) updates the
+  `fact_count` / `dream_cycles_count` rows from "Reserved in v1.2.0
+  — always sent as 0" to past-tense; the fields are now populated.
+- Items from the original v1.2.1 draft scope that were serialized
+  out: tiered directive enforcement, per-fact provenance API surface
+  (`agent.facts.trace()`), fact-aware critic veto, intra-agent
+  conflict detection on `directives.add()`, `SharedMemory.content`
+  shape preservation, license enforcement hardening (move into
+  `_internal/`). All now in `V1_2_2.md`.
+
+---
+
 ## [1.2.0] -- 2026-05-03
 
 **Headline.** Wisdom Layer agents can now learn from each other.
